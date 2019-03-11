@@ -68,11 +68,16 @@ Game::Game(sf::ContextSettings settings) :
 	game_object[1] = new GameObject();
 	game_object[1]->setPosition(vec3(0.0f, 0.8f, 0.0f));
 
+
 	game_object[2] = new GameObject();
 	game_object[2]->setPosition(vec3(4.0f, 0.8f, 0.0f));
 
+
+	game_object[3] = new GameObject();
+	game_object[3]->setPosition(vec3(2.0f, 0.8f, 0.0f));
+
 	playerObject = new GameObject();
-	playerObject->setPosition(vec3(-4.0f, 0.8f, -4.0f));
+	playerObject->setPosition(vec3(0.0f, 2.8f, 0.0f));
 }
 
 Game::~Game()
@@ -97,6 +102,19 @@ void Game::run()
 		DEBUG_MSG("Game running...");
 #endif
 
+		//moves the player down with a type of gravity
+	
+		if (playerObject->getPosition().y == 2.8f)
+		{
+			/*modelPlayer = glm::translate(modelPlayer, glm::vec3(0, 0.1f, 0));*/
+		}
+		else
+		{
+			modelPlayer = glm::translate(modelPlayer, glm::vec3(0, -0.1f, 0));
+		}
+		std::cout << playerObject->getPosition().x << " " << playerObject->getPosition().y << " " << playerObject->getPosition().z <<  std::endl;
+
+
 		while (window.pollEvent(event))
 		{
 			if (event.type == Event::Closed)
@@ -110,9 +128,9 @@ void Game::run()
 				if (!animate)
 				{
 					animate = true;
-					if (rotation < 0)
-						rotation *= -1; // Set Positive
-					animation = glm::vec3(0, 1, 0); //Rotate Y
+					/*if (rotation < 0)
+						rotation *= -1;*/ // Set Positive
+					/*animation = glm::vec3(0, 1, 0);*/ //Rotate Y
 				}
 			}
 
@@ -122,9 +140,9 @@ void Game::run()
 				if (!animate)
 				{
 					animate = true;
-					if (rotation >= 0)
-						rotation *= -1; // Set Negative
-					animation = glm::vec3(0, 1, 0); //Rotate Y
+					/*if (rotation >= 0)
+						rotation *= -1;*/ // Set Negative
+					/*animation = glm::vec3(0, 1, 0);*/ //Rotate Y
 				}
 
 				// https://www.sfml-dev.org/documentation/2.0/classsf_1_1Clock.php
@@ -174,22 +192,38 @@ void Game::run()
 				*/
 			}
 
-			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
-			{
-				// Set Model Rotation
-				model = rotate(model, -0.01f, glm::vec3(1, 0, 0)); // Rotate
-			}
+			//else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
+			//{
+			//	 Set Model Rotation
+			//	modelPlayer = rotate(modelPlayer, -0.01f, glm::vec3(1, 0, 0)); // Rotate
+			//}
 
-			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
+			//else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
+			//{
+			//	 Set Model Rotation
+			//	modelPlayer = rotate(modelPlayer, 0.01f, glm::vec3(1, 0, 0)); // Rotate
+			//}
+			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
 			{
-				// Set Model Rotation
-				model = rotate(model, 0.01f, glm::vec3(1, 0, 0)); // Rotate
+				/*modelPlayer = glm::translate(modelPlayer, glm::vec3(1.0f, 0.0f, 0.0f));*/
+				playerObject->setPosition(vec3(playerObject->getPosition().x + 1.0f, playerObject->getPosition().y, playerObject->getPosition().z));
+				
+			}
+			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
+			{
+				/*modelPlayer = glm::translate(modelPlayer, glm::vec3(-1, 0, 0));*/
+				playerObject->setPosition(vec3(playerObject->getPosition().x - 1.0f, playerObject->getPosition().y, playerObject->getPosition().z));
+			}
+			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
+			{
+				/*modelPlayer = glm::translate(modelPlayer, glm::vec3(0, 0.1f, 0));*/
+				playerObject->setPosition(vec3(playerObject->getPosition().x , playerObject->getPosition().y +0.5f, playerObject->getPosition().z));
 			}
 
 			if (animate)
 			{
 				rotation += (1.0f * rotation) + 0.05f;
-				model = rotate(model, 0.01f, animation); // Rotate
+				modelPlayer = rotate(modelPlayer, 0.01f, animation); // Rotate
 				rotation = 0.0f;
 				animate = false;
 			}
@@ -530,7 +564,7 @@ void Game::render()
 	glEnableVertexAttribArray(colorID);
 	glEnableVertexAttribArray(uvID);
 	//run through a for loop to draw two cubes
-	for (int i = 0; i < 3; i++)
+	for (int i = 0; i < 4; i++)
 	{
 		glUniform1f(x_offsetID, game_object[i]->getPosition().x);
 		glUniform1f(y_offsetID, game_object[i]->getPosition().y);
@@ -539,13 +573,14 @@ void Game::render()
 		// Draw Element Arrays
 		glDrawElements(GL_TRIANGLES, 3 * INDICES, GL_UNSIGNED_INT, NULL);
 	}
-	glUniformMatrix4fv(mvpID, 1, GL_FALSE, &mvpPlayer[0][0]);
+	
 
+	glUniformMatrix4fv(mvpID, 1, GL_FALSE, &mvpPlayer[0][0]);
 
 	glUniform1f(x_offsetID, playerObject->getPosition().x);
 	glUniform1f(y_offsetID, playerObject->getPosition().y);
 	glUniform1f(y_offsetID, playerObject->getPosition().y);
-
+	
 	glDrawElements(GL_TRIANGLES, 3 * INDICES, GL_UNSIGNED_INT, NULL);
 	
 	window.display();

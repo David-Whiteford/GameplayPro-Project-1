@@ -34,7 +34,7 @@ public:
 	~Game();
 	void run();
 private:
-	GameObject* game_object[3];
+	GameObject* game_object[4];
 	GameObject* playerObject;
 	RenderWindow window;
 	Clock clock;
