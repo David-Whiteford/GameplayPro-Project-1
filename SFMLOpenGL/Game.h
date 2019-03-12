@@ -33,9 +33,11 @@ public:
 	Game(sf::ContextSettings settings);
 	~Game();
 	void run();
+	
 private:
 	GameObject* game_object[4];
 	GameObject* playerObject;
+	GameObject* obstacleObject;
 	RenderWindow window;
 	Clock clock;
 	Time time;
@@ -43,6 +45,7 @@ private:
 	vec3 animation = vec3(0.0f);
 	float rotation = 0.0f;
 	bool isRunning = false;
+	int m_timer{ 0 };
 	void initialize();
 	void update();
 	void render();
