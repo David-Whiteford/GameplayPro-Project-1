@@ -63,21 +63,21 @@ Game::Game(sf::ContextSettings settings) :
 	settings)
 {
 	game_object[0] = new GameObject();
-	game_object[0]->setPosition(vec3(-4.0f, 0.8f, 0.0f));
+	game_object[0]->setPosition(vec3(-4.0f, -2.8f, 0.0f));
 
 	game_object[1] = new GameObject();
-	game_object[1]->setPosition(vec3(0.0f, 0.8f, 0.0f));
+	game_object[1]->setPosition(vec3(0.0f, -2.8f, 0.0f));
 
 
 	game_object[2] = new GameObject();
-	game_object[2]->setPosition(vec3(4.0f, 0.8f, 0.0f));
+	game_object[2]->setPosition(vec3(4.0f, -2.8f, 0.0f));
 
 
 	game_object[3] = new GameObject();
-	game_object[3]->setPosition(vec3(2.0f, 0.8f, 0.0f));
+	game_object[3]->setPosition(vec3(2.0f, -2.8f, 0.0f));
 
 	playerObject = new GameObject();
-	playerObject->setPosition(vec3(0.0f, 2.8f, 0.0f));
+	playerObject->setPosition(vec3(0.0f, -0.8f, 0.0f));
 }
 
 Game::~Game()
@@ -102,19 +102,71 @@ void Game::run()
 		DEBUG_MSG("Game running...");
 #endif
 
-		//moves the player down with a type of gravity
+		m_moveState = MoveStates::Stationary;
+
+		switch (m_moveState)
+		{
+		case MoveStates::Stationary:
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
+			{
+				modelPlayer = glm::translate(modelPlayer, glm::vec3(0.01f, 0.0f, 0.0f));
+				playerObject->setPosition(vec3(playerObject->getPosition().x + 0.01f, playerObject->getPosition().y, playerObject->getPosition().z));
+
+			}
+			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
+			{
+				modelPlayer = glm::translate(modelPlayer, glm::vec3(-0.01f, 0, 0));
+				playerObject->setPosition(vec3(playerObject->getPosition().x - 0.01f, playerObject->getPosition().y, playerObject->getPosition().z));
+			}
+			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
+			{
+			
+				m_moveState = MoveStates::Jumping; 
+				
+			}
+			break;
+		case MoveStates::Jumping:
+			if (playerObject->getPosition().y < -0.5f)
+			{
+				modelPlayer = glm::translate(modelPlayer, glm::vec3(0, 0.01f, 0));
+				playerObject->setPosition(vec3(playerObject->getPosition().x, playerObject->getPosition().y + 0.01f, playerObject->getPosition().z));
+			}
+			
+			if ((playerObject->getPosition().y >= -0.5f))
+			{
+				m_moveState = MoveStates::Falling;
+			}
+			break;
+		case MoveStates::Falling:
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::C))
+			{
+				modelPlayer = glm::translate(modelPlayer, glm::vec3(0, -0.01f, 0));
+				playerObject->setPosition(vec3(playerObject->getPosition().x, playerObject->getPosition().y - 0.01f, playerObject->getPosition().z));
+			}
+			break;
+		}
 	
-		if (playerObject->getPosition().y == 2.8f)
-		{
-			/*modelPlayer = glm::translate(modelPlayer, glm::vec3(0, 0.1f, 0));*/
-		}
-		else
-		{
-			modelPlayer = glm::translate(modelPlayer, glm::vec3(0, -0.1f, 0));
-		}
-		std::cout << playerObject->getPosition().x << " " << playerObject->getPosition().y << " " << playerObject->getPosition().z <<  std::endl;
+		
+		
 
+		
 
+		/*if (playerObject->getPosition().y > 2.8f)
+		{
+			modelPlayer = glm::translate(modelPlayer, glm::vec3(0, -0.05f, 0));
+
+		}
+		playerObject->setPosition(vec3(playerObject->getPosition().x, playerObject->getPosition().y - 0.05f, playerObject->getPosition().z));*/
+		
+
+		
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
+		{
+			modelPlayer = glm::translate(modelPlayer, glm::vec3(0, 0.5f, 0));
+			playerObject->setPosition(vec3(playerObject->getPosition().x, playerObject->getPosition().y + 0.05f, playerObject->getPosition().z));
+		}
+		
+		std::cout << playerObject->getPosition().x << " " << playerObject->getPosition().y << " " << playerObject->getPosition().z << std::endl;
 		while (window.pollEvent(event))
 		{
 			if (event.type == Event::Closed)
@@ -203,30 +255,24 @@ void Game::run()
 			//	 Set Model Rotation
 			//	modelPlayer = rotate(modelPlayer, 0.01f, glm::vec3(1, 0, 0)); // Rotate
 			//}
-			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
+			/*else if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
 			{
-				/*modelPlayer = glm::translate(modelPlayer, glm::vec3(1.0f, 0.0f, 0.0f));*/
-				playerObject->setPosition(vec3(playerObject->getPosition().x + 1.0f, playerObject->getPosition().y, playerObject->getPosition().z));
+				modelPlayer = glm::translate(modelPlayer, glm::vec3(0.5f, 0.0f, 0.0f));
+				playerObject->setPosition(vec3(playerObject->getPosition().x + 0.5f, playerObject->getPosition().y, playerObject->getPosition().z));
 				
 			}
 			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
 			{
-				/*modelPlayer = glm::translate(modelPlayer, glm::vec3(-1, 0, 0));*/
-				playerObject->setPosition(vec3(playerObject->getPosition().x - 1.0f, playerObject->getPosition().y, playerObject->getPosition().z));
+				modelPlayer = glm::translate(modelPlayer, glm::vec3(-0.5f, 0, 0));
+				playerObject->setPosition(vec3(playerObject->getPosition().x - 0.5f, playerObject->getPosition().y, playerObject->getPosition().z));
 			}
 			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
 			{
-				/*modelPlayer = glm::translate(modelPlayer, glm::vec3(0, 0.1f, 0));*/
+				modelPlayer = glm::translate(modelPlayer, glm::vec3(0, 0.1f, 0));
 				playerObject->setPosition(vec3(playerObject->getPosition().x , playerObject->getPosition().y +0.5f, playerObject->getPosition().z));
-			}
+			}*/
 
-			if (animate)
-			{
-				rotation += (1.0f * rotation) + 0.05f;
-				modelPlayer = rotate(modelPlayer, 0.01f, animation); // Rotate
-				rotation = 0.0f;
-				animate = false;
-			}
+			
 		}
 		update();
 		render();

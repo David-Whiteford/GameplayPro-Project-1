@@ -47,6 +47,17 @@ private:
 	void update();
 	void render();
 	void unload();
+
+	enum MoveStates
+	{
+		Jumping,
+		Falling,
+		Stationary
+
+	}
+	m_moveState;
+
+
 };
 
 #endif  // ! GAME_H
