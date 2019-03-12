@@ -172,6 +172,38 @@ void Game::run()
 			}
 			break;
 		}
+		if (obstacleObject->getPosition().y <= 0.6f )
+		{
+			modelObstacle = glm::translate(modelObstacle, glm::vec3(0, 0.01f, 0));
+			obstacleObject->setPosition(vec3(obstacleObject->getPosition().x, obstacleObject->getPosition().y + 0.01f, obstacleObject->getPosition().z));
+		}
+		std::cout << obstacleObject->getPosition().y << std::endl;
+		if (obstacleObject->getPosition().y >= 0.6f)
+		{
+			modelObstacle = glm::translate(modelObstacle, glm::vec3(0, -0.01f, 0));
+			obstacleObject->setPosition(vec3(obstacleObject->getPosition().x, obstacleObject->getPosition().y - 0.01f, obstacleObject->getPosition().z));
+		}
+
+		if (m_timer < 1200)
+		{
+			m_timer++;
+		}
+
+		/*std::cout << m_timer << std::endl;*/
+		/*else
+		{
+			m_timer = 0;
+		}*/
+
+		if (m_timer == 1200)
+		{
+			modelObstacle = glm::translate(modelObstacle, glm::vec3(0, -0.02f, 0));
+			obstacleObject->setPosition(vec3(obstacleObject->getPosition().x, obstacleObject->getPosition().y - 0.02f, obstacleObject->getPosition().z));
+			
+
+		}
+
+
 		
 		while (window.pollEvent(event))
 		{
