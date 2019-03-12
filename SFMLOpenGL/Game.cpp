@@ -51,7 +51,7 @@ modelObstacle;
 
 Font font;						// Game font
 
-float x_offset, y_offset, z_offset; // offset on screen (Vertex Shader)
+float x_offset{ 10.0f }, y_offset{ 1.0f }, z_offset{ -10.0f }; // offset on screen (Vertex Shader)
 
 Game::Game() : 
 	window(VideoMode(800, 600), 
@@ -117,7 +117,7 @@ void Game::run()
 {
 
 	initialize();
-
+	setUpcontent();
 	Event event;
 
 	float rotation = 0.01f;
@@ -133,108 +133,7 @@ void Game::run()
 
 
 
-		//if the d key is pressed
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
-		{
-			//move the player model to the right
-			modelPlayer = glm::translate(modelPlayer, glm::vec3(0.01f, 0.0f, 0.0f));
-			
-			playerObject->setPosition(vec3(playerObject->getPosition().x + 0.01f, playerObject->getPosition().y, playerObject->getPosition().z));
 
-			view = lookAt(
-				vec3(0.0f, 4.0f, 10.0f),	// Camera (x,y,z), in World Space
-				vec3(playerObject->getPosition().x, playerObject->getPosition().y, playerObject->getPosition().z),		// Camera looking at origin
-				vec3(0.0f, 1.0f, 0.0f)		// 0.0f, 1.0f, 0.0f Look Down and 0.0f, -1.0f, 0.0f Look Up
-			);
-		}
-		//when the a is pressed move to the left
-		else if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
-		{
-			//move the player model to the left
-			modelPlayer = glm::translate(modelPlayer, glm::vec3(-0.01f, 0, 0));
-			playerObject->setPosition(vec3(playerObject->getPosition().x - 0.01f, playerObject->getPosition().y, playerObject->getPosition().z));
-		}
-		//switch statement for the jumping states
-		switch (m_moveState)
-		{
-			//the initial state the not jumping state
-		case MoveStates::Stationary:
-			//checks if the space bar is pressd and switchs the state to jumping
-			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
-			{
-				m_moveState = MoveStates::Jumping;
-			}
-			break;
-			//jumping state
-		case MoveStates::Jumping:	
-			//moves the player model up the screen
-			modelPlayer = glm::translate(modelPlayer, glm::vec3(0, 0.01f, 0));
-			playerObject->setPosition(vec3(playerObject->getPosition().x, playerObject->getPosition().y + 0.01f, playerObject->getPosition().z));
-			//if the player model is greater than or equal to 0.5
-			if (playerObject->getPosition().y  >= 0.6f )
-			{
-				//then set the state to falling
-				m_moveState = MoveStates::Falling;
-			}
-			break;
-		case MoveStates::Falling:
-			//if its greater than -0.8 the cause the player to fall 
-			if (playerObject->getPosition().y >= -0.8f)
-			{
-				//move down till -0.8
-				modelPlayer = glm::translate(modelPlayer, glm::vec3(0, -0.01, 0));
-				playerObject->setPosition(vec3(playerObject->getPosition().x, playerObject->getPosition().y - 0.01, playerObject->getPosition().z));
-			}
-			/*if(playerObject->getPosition().x >=)*/
-			//at -0.8 then set the state to staionary
-			else if (playerObject->getPosition().y <= -0.8f)
-			{
-				m_moveState = MoveStates::Stationary;
-			}
-			break;
-		}
-
-		//timer for the obstacle movement
-		if (m_timer < 1200)
-		{
-			m_timer++;
-		}
-
-		for (int i = 0; i < 3; i++)
-		{
-			switch (m_blockMove)
-			{
-			case AiMove::MoveUp:
-
-				if (obstacleObject[i]->getPosition().y <= 0.2f)
-				{
-					modelObstacle = glm::translate(modelObstacle, glm::vec3(0, 0.01f, 0));
-					obstacleObject[i]->setPosition(vec3(obstacleObject[i]->getPosition().x, obstacleObject[i]->getPosition().y + 0.01f, obstacleObject[i]->getPosition().z));
-				}
-				if (obstacleObject[i]->getPosition().y >= 0.2f)
-				{
-					modelObstacle = glm::translate(modelObstacle, glm::vec3(0, -0.01f, 0));
-					obstacleObject[i]->setPosition(vec3(obstacleObject[i]->getPosition().x, obstacleObject[i]->getPosition().y - 0.01f, obstacleObject[i]->getPosition().z));
-					m_blockMove = AiMove::MoveDown;
-				}
-				break;
-			case AiMove::MoveDown:
-
-				if (m_timer == 1200 && obstacleObject[i]->getPosition().y >= -0.8f)
-				{
-					modelObstacle = glm::translate(modelObstacle, glm::vec3(0, -0.02f, 0));
-					obstacleObject[i]->setPosition(vec3(obstacleObject[i]->getPosition().x, obstacleObject[i]->getPosition().y - 0.02f, obstacleObject[i]->getPosition().z));
-				}
-				else if (obstacleObject[i]->getPosition().y <= -0.8f)
-				{
-					m_blockMove = AiMove::MoveUp;
-					m_timer = 0;
-				}
-
-				break;
-
-			}
-		}
 		while (window.pollEvent(event))
 		{
 			if (event.type == Event::Closed)
@@ -323,22 +222,8 @@ void Game::run()
 			//	 Set Model Rotation
 			//	modelPlayer = rotate(modelPlayer, 0.01f, glm::vec3(1, 0, 0)); // Rotate
 			//}
-			/*else if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
-			{
-				modelPlayer = glm::translate(modelPlayer, glm::vec3(0.5f, 0.0f, 0.0f));
-				playerObject->setPosition(vec3(playerObject->getPosition().x + 0.5f, playerObject->getPosition().y, playerObject->getPosition().z));
-				
-			}
-			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
-			{
-				modelPlayer = glm::translate(modelPlayer, glm::vec3(-0.5f, 0, 0));
-				playerObject->setPosition(vec3(playerObject->getPosition().x - 0.5f, playerObject->getPosition().y, playerObject->getPosition().z));
-			}
-			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
-			{
-				modelPlayer = glm::translate(modelPlayer, glm::vec3(0, 0.1f, 0));
-				playerObject->setPosition(vec3(playerObject->getPosition().x , playerObject->getPosition().y +0.5f, playerObject->getPosition().z));
-			}*/
+			
+	
 
 			
 		}
@@ -355,6 +240,22 @@ void Game::run()
 
 void Game::initialize()
 {
+
+
+	
+	aabb_ground.min = c2V(groundRect.getPosition().x, groundRect.getPosition().y);
+	aabb_ground.max = c2V(
+		groundRect.getPosition().x +
+		groundRect.getGlobalBounds().width,
+		groundRect.getPosition().y +
+		groundRect.getGlobalBounds().height);
+
+
+	
+	aabb_player.min = c2V(playerRect.getPosition().x, playerRect.getPosition().y);
+	aabb_player.max = c2V(playerRect.getGlobalBounds().width / 6, playerRect.getGlobalBounds().width / 6);
+
+
 	isRunning = true;
 	GLint isCompiled = 0;
 	GLint isLinked = 0;
@@ -562,6 +463,135 @@ void Game::initialize()
 
 void Game::update()
 {
+
+
+
+
+
+	//if the d key is pressed
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
+	{
+		//move the player model to the right
+		modelPlayer = glm::translate(modelPlayer, glm::vec3(0.01f, 0.0f, 0.0f));
+
+		playerObject->setPosition(vec3(playerObject->getPosition().x + 0.01f, playerObject->getPosition().y, playerObject->getPosition().z));
+
+		//view = lookAt(
+		//	vec3(playerObject->getPosition().x - x_offset, playerObject->getPosition().y - z_offset, playerObject->getPosition().z - z_offset),	// Camera (x,y,z), in World Space
+		//	vec3(playerObject->getPosition().x, playerObject->getPosition().y, playerObject->getPosition().z),		// Camera looking at origin
+		//	vec3(0.0f, 1.0f, 0.0f)		// 0.0f, 1.0f, 0.0f Look Down and 0.0f, -1.0f, 0.0f Look Up
+		//);
+	}
+	//when the a is pressed move to the left
+	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
+	{
+		//move the player model to the left
+		modelPlayer = glm::translate(modelPlayer, glm::vec3(-0.01f, 0, 0));
+		playerObject->setPosition(vec3(playerObject->getPosition().x - 0.01f, playerObject->getPosition().y, playerObject->getPosition().z));
+
+		//view = lookAt(
+		//	vec3(playerObject->getPosition().x - x_offset, playerObject->getPosition().y - z_offset, playerObject->getPosition().z - z_offset),	// Camera (x,y,z), in World Space
+		//	vec3(playerObject->getPosition().x, playerObject->getPosition().y, playerObject->getPosition().z),		// Camera looking at origin
+		//	vec3(0.0f, 1.0f, 0.0f)
+		//);
+	}
+	//switch statement for the jumping states
+	switch (m_moveState)
+	{
+		//the initial state the not jumping state
+	case MoveStates::Stationary:
+		//checks if the space bar is pressd and switchs the state to jumping
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
+		{
+			m_moveState = MoveStates::Jumping;
+		}
+		break;
+		//jumping state
+	case MoveStates::Jumping:
+		//moves the player model up the screen
+		modelPlayer = glm::translate(modelPlayer, glm::vec3(0, 0.01f, 0));
+		playerObject->setPosition(vec3(playerObject->getPosition().x, playerObject->getPosition().y + 0.01f, playerObject->getPosition().z));
+		//if the player model is greater than or equal to 0.5
+		if (playerObject->getPosition().y >= 0.6f)
+		{
+			//then set the state to falling
+			m_moveState = MoveStates::Falling;
+		}
+		break;
+	case MoveStates::Falling:
+		//if its greater than -0.8 the cause the player to fall 
+		if (playerObject->getPosition().y >= -0.8f)
+		{
+			//move down till -0.8
+			modelPlayer = glm::translate(modelPlayer, glm::vec3(0, -0.01, 0));
+			playerObject->setPosition(vec3(playerObject->getPosition().x, playerObject->getPosition().y - 0.01, playerObject->getPosition().z));
+		}
+		/*if(playerObject->getPosition().x >=)*/
+		//at -0.8 then set the state to staionary
+		else if (playerObject->getPosition().y <= -0.8f)
+		{
+			m_moveState = MoveStates::Stationary;
+		}
+		break;
+	}
+
+	//timer for the obstacle movement
+	if (m_timer < 1200)
+	{
+		m_timer++;
+	}
+
+	for (int i = 0; i < 3; i++)
+	{
+		switch (m_blockMove)
+		{
+		case AiMove::MoveUp:
+
+			if (obstacleObject[i]->getPosition().y <= 0.2f)
+			{
+				modelObstacle = glm::translate(modelObstacle, glm::vec3(0, 0.01f, 0));
+				obstacleObject[i]->setPosition(vec3(obstacleObject[i]->getPosition().x, obstacleObject[i]->getPosition().y + 0.01f, obstacleObject[i]->getPosition().z));
+			}
+			if (obstacleObject[i]->getPosition().y >= 0.2f)
+			{
+				modelObstacle = glm::translate(modelObstacle, glm::vec3(0, -0.01f, 0));
+				obstacleObject[i]->setPosition(vec3(obstacleObject[i]->getPosition().x, obstacleObject[i]->getPosition().y - 0.01f, obstacleObject[i]->getPosition().z));
+				m_blockMove = AiMove::MoveDown;
+			}
+			break;
+		case AiMove::MoveDown:
+
+			if (m_timer == 1200 && obstacleObject[i]->getPosition().y >= -0.8f)
+			{
+				modelObstacle = glm::translate(modelObstacle, glm::vec3(0, -0.02f, 0));
+				obstacleObject[i]->setPosition(vec3(obstacleObject[i]->getPosition().x, obstacleObject[i]->getPosition().y - 0.02f, obstacleObject[i]->getPosition().z));
+			}
+			else if (obstacleObject[i]->getPosition().y <= -0.8f)
+			{
+				m_blockMove = AiMove::MoveUp;
+				m_timer = 0;
+			}
+
+			break;
+
+		}
+	}
+
+
+	aabb_ground.min = c2V(groundRect.getPosition().x, groundRect.getPosition().y);
+	aabb_ground.max = c2V(
+		groundRect.getPosition().x +
+		groundRect.getGlobalBounds().width,
+		groundRect.getPosition().y +
+		groundRect.getGlobalBounds().height);
+
+
+
+	aabb_player.min = c2V(playerRect.getPosition().x, playerRect.getPosition().y);
+	aabb_player.max = c2V(playerRect.getGlobalBounds().width / 6, playerRect.getGlobalBounds().width / 6);
+
+	/*result = c2AABBtoAABB(aabb_player, aabb_ground);*/
+
 #if (DEBUG >= 2)
 	DEBUG_MSG("Updating...");
 #endif
@@ -653,7 +683,7 @@ void Game::render()
 	// VBO Data....vertices, colors and UV's appended
 	// Add the Vertices for all your GameOjects, Colors and UVS
 	
-	glBufferSubData(GL_ARRAY_BUFFER, 0 * VERTICES * sizeof(GLfloat), 3 * VERTICES * sizeof(GLfloat), game_object[0]->getVertex());
+  	glBufferSubData(GL_ARRAY_BUFFER, 0 * VERTICES * sizeof(GLfloat), 3 * VERTICES * sizeof(GLfloat), game_object[0]->getVertex());
 
 	//glBufferSubData(GL_ARRAY_BUFFER, 0 * VERTICES * sizeof(GLfloat), 3 * VERTICES * sizeof(GLfloat), vertices);
 	glBufferSubData(GL_ARRAY_BUFFER, 3 * VERTICES * sizeof(GLfloat), 4 * COLORS * sizeof(GLfloat), colors);
@@ -711,7 +741,7 @@ void Game::render()
 		glDrawElements(GL_TRIANGLES, 3 * INDICES, GL_UNSIGNED_INT, NULL);
 	}
 	
-	
+	/*window.draw(playerRect);*/
 	window.display();
 
 	// Disable Arrays
@@ -747,4 +777,16 @@ void Game::unload()
 	glDeleteBuffers(1, &vib);		// Delete Vertex Index Buffer
 	stbi_image_free(img_data);		// Free image stbi_image_free(..)
 }
+void Game::setUpcontent()
+{
+	if (!texture.loadFromFile("Assets\\Textures\\square.png"))
+	{
+		std::cout << "Cant load square image " << std::endl;
+	}
 
+	playerRect.setTexture(texture);
+	playerRect.setPosition(playerObject->getPosition().x, playerObject->getPosition().y);
+
+	groundRect.setTexture(texture);
+	groundRect.setPosition(game_object[0]->getPosition().x, game_object[0]->getPosition().y);
+}

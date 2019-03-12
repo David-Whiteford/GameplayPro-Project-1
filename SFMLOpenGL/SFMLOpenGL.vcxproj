@@ -160,6 +160,7 @@
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="Matrix3.h" />
     <ClInclude Include="stb_image.h" />
+    <ClInclude Include="tinyc2.h" />
     <ClInclude Include="Vector3.h" />
   </ItemGroup>
   <ItemGroup>

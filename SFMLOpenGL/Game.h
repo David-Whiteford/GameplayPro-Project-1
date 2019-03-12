@@ -4,6 +4,9 @@
 #include <string>
 #include <sstream>
 
+//#define TINYC2_IMPL
+#include <tinyc2.h>
+
 #include <iostream>
 #include <GL/glew.h>
 #include <GL/wglew.h>
@@ -39,6 +42,14 @@ private:
 	GameObject* playerObject;
 	GameObject* obstacleObject[3];
 	RenderWindow window;
+	sf::Texture texture;
+	sf::Sprite playerRect;
+	sf::Sprite groundRect;
+
+	c2AABB aabb_ground;
+	c2AABB aabb_player;
+	int result{ 0 };
+
 	Clock clock;
 	Time time;
 	bool animate = false;
@@ -52,6 +63,7 @@ private:
 	void update();
 	void render();
 	void unload();
+	void setUpcontent();
 	enum AiMove
 	{
 		MoveUp,
