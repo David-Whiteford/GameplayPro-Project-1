@@ -80,14 +80,31 @@ Game::Game(sf::ContextSettings settings) :
 
 	game_object[3] = new GameObject();
 	game_object[3]->setPosition(vec3(6.0f, -2.8, 0.0f));
+
+	game_object[4] = new GameObject();
+	game_object[4]->setPosition(vec3(8.0f, -2.8, 0.0f));
+
+	game_object[5] = new GameObject();
+	game_object[5]->setPosition(vec3(12.0f, -2.8, 0.0f));
+
+	game_object[6] = new GameObject();
+	game_object[6]->setPosition(vec3(14.0f, -2.8, 0.0f));
 	//set up the object for player and the obstacles and set their positions
 	playerObject = new GameObject();
 	playerObject->setPosition(vec3(-4.0f, -0.8, 0.0f));
 
-	obstacleObject = new GameObject();
-	obstacleObject->setPosition(vec3(6.0f, -0.8f, 0.0f));
+	obstacleObject[0] = new GameObject();
+	obstacleObject[0]->setPosition(vec3(6.0f, -0.8f, 0.0f));
+
+	obstacleObject[1] = new GameObject();
+	obstacleObject[1]->setPosition(vec3(12.0f, -0.8f, 0.0f));
+
+	obstacleObject[2] = new GameObject();
+	obstacleObject[2]->setPosition(vec3(15.0f, -0.8f, 0.0f));
+
 	//set the initial state
 	m_moveState = MoveStates::Stationary;
+	m_blockMove = AiMove::MoveUp;
 
 }
 
@@ -124,6 +141,11 @@ void Game::run()
 			
 			playerObject->setPosition(vec3(playerObject->getPosition().x + 0.01f, playerObject->getPosition().y, playerObject->getPosition().z));
 
+			view = lookAt(
+				vec3(0.0f, 4.0f, 10.0f),	// Camera (x,y,z), in World Space
+				vec3(playerObject->getPosition().x, playerObject->getPosition().y, playerObject->getPosition().z),		// Camera looking at origin
+				vec3(0.0f, 1.0f, 0.0f)		// 0.0f, 1.0f, 0.0f Look Down and 0.0f, -1.0f, 0.0f Look Up
+			);
 		}
 		//when the a is pressed move to the left
 		else if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
@@ -140,7 +162,6 @@ void Game::run()
 			//checks if the space bar is pressd and switchs the state to jumping
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
 			{
-			
 				m_moveState = MoveStates::Jumping;
 			}
 			break;
@@ -172,39 +193,48 @@ void Game::run()
 			}
 			break;
 		}
-		if (obstacleObject->getPosition().y <= 0.6f )
-		{
-			modelObstacle = glm::translate(modelObstacle, glm::vec3(0, 0.01f, 0));
-			obstacleObject->setPosition(vec3(obstacleObject->getPosition().x, obstacleObject->getPosition().y + 0.01f, obstacleObject->getPosition().z));
-		}
-		std::cout << obstacleObject->getPosition().y << std::endl;
-		if (obstacleObject->getPosition().y >= 0.6f)
-		{
-			modelObstacle = glm::translate(modelObstacle, glm::vec3(0, -0.01f, 0));
-			obstacleObject->setPosition(vec3(obstacleObject->getPosition().x, obstacleObject->getPosition().y - 0.01f, obstacleObject->getPosition().z));
-		}
 
+		//timer for the obstacle movement
 		if (m_timer < 1200)
 		{
 			m_timer++;
 		}
 
-		/*std::cout << m_timer << std::endl;*/
-		/*else
+		for (int i = 0; i < 3; i++)
 		{
-			m_timer = 0;
-		}*/
+			switch (m_blockMove)
+			{
+			case AiMove::MoveUp:
 
-		if (m_timer == 1200)
-		{
-			modelObstacle = glm::translate(modelObstacle, glm::vec3(0, -0.02f, 0));
-			obstacleObject->setPosition(vec3(obstacleObject->getPosition().x, obstacleObject->getPosition().y - 0.02f, obstacleObject->getPosition().z));
-			
+				if (obstacleObject[i]->getPosition().y <= 0.2f)
+				{
+					modelObstacle = glm::translate(modelObstacle, glm::vec3(0, 0.01f, 0));
+					obstacleObject[i]->setPosition(vec3(obstacleObject[i]->getPosition().x, obstacleObject[i]->getPosition().y + 0.01f, obstacleObject[i]->getPosition().z));
+				}
+				if (obstacleObject[i]->getPosition().y >= 0.2f)
+				{
+					modelObstacle = glm::translate(modelObstacle, glm::vec3(0, -0.01f, 0));
+					obstacleObject[i]->setPosition(vec3(obstacleObject[i]->getPosition().x, obstacleObject[i]->getPosition().y - 0.01f, obstacleObject[i]->getPosition().z));
+					m_blockMove = AiMove::MoveDown;
+				}
+				break;
+			case AiMove::MoveDown:
 
+				if (m_timer == 1200 && obstacleObject[i]->getPosition().y >= -0.8f)
+				{
+					modelObstacle = glm::translate(modelObstacle, glm::vec3(0, -0.02f, 0));
+					obstacleObject[i]->setPosition(vec3(obstacleObject[i]->getPosition().x, obstacleObject[i]->getPosition().y - 0.02f, obstacleObject[i]->getPosition().z));
+				}
+				else if (obstacleObject[i]->getPosition().y <= -0.8f)
+				{
+					m_blockMove = AiMove::MoveUp;
+					m_timer = 0;
+				}
+
+				break;
+
+			}
 		}
-
-
-		
 		while (window.pollEvent(event))
 		{
 			if (event.type == Event::Closed)
@@ -652,7 +682,7 @@ void Game::render()
 	glEnableVertexAttribArray(colorID);
 	glEnableVertexAttribArray(uvID);
 	//run through a for loop to draw two cubes
-	for (int i = 0; i < 4; i++)
+	for (int i = 0; i < 6; i++)
 	{
 		glUniform1f(x_offsetID, game_object[i]->getPosition().x);
 		glUniform1f(y_offsetID, game_object[i]->getPosition().y);
@@ -672,12 +702,15 @@ void Game::render()
 	glDrawElements(GL_TRIANGLES, 3 * INDICES, GL_UNSIGNED_INT, NULL);
 	
 	glUniformMatrix4fv(mvpID, 1, GL_FALSE, &mvpObstacle[0][0]);
+	for (int i = 0; i < 3; i++)
+	{
+		glUniform1f(x_offsetID, obstacleObject[i]->getPosition().x);
+		glUniform1f(y_offsetID, obstacleObject[i]->getPosition().y);
+		glUniform1f(y_offsetID, obstacleObject[i]->getPosition().y);
 
-	glUniform1f(x_offsetID, obstacleObject->getPosition().x);
-	glUniform1f(y_offsetID, obstacleObject->getPosition().y);
-	glUniform1f(y_offsetID, obstacleObject->getPosition().y);
-
-	glDrawElements(GL_TRIANGLES, 3 * INDICES, GL_UNSIGNED_INT, NULL);
+		glDrawElements(GL_TRIANGLES, 3 * INDICES, GL_UNSIGNED_INT, NULL);
+	}
+	
 	
 	window.display();
 

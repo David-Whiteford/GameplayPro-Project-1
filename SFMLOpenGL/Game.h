@@ -35,22 +35,29 @@ public:
 	void run();
 	
 private:
-	GameObject* game_object[4];
+	GameObject* game_object[6];
 	GameObject* playerObject;
-	GameObject* obstacleObject;
+	GameObject* obstacleObject[3];
 	RenderWindow window;
 	Clock clock;
 	Time time;
 	bool animate = false;
 	vec3 animation = vec3(0.0f);
 	float rotation = 0.0f;
+	float xPos{ 0.0f };
+	float yPos{ 0.0f };
 	bool isRunning = false;
 	int m_timer{ 0 };
 	void initialize();
 	void update();
 	void render();
 	void unload();
-
+	enum AiMove
+	{
+		MoveUp,
+		MoveDown
+	}
+	m_blockMove;
 	enum MoveStates
 	{
 		Jumping,
