@@ -49,9 +49,12 @@ mat4 mvpPlayer,
 mat4 mvpObstacle,
 modelObstacle;
 
+mat4 mvpRamps,
+modelRamps;
+
 Font font;						// Game font
 
-float x_offset{ 10.0f }, y_offset{ -10.0f }, z_offset{ -10.0f }; // offset on screen (Vertex Shader)
+
 
 Game::Game() : 
 	window(VideoMode(800, 600), 
@@ -72,24 +75,41 @@ Game::Game(sf::ContextSettings settings) :
 
 
 	float xPosition{ -4.0f };
+
+	float xpositionRamps{ 17.0f };
+	float ypositionRamps{ -0.8f };
+	float obstacleXPosition{ 6.0f };
 	for (int i = 0; i < 50; i++)
 	{
 		game_object[i] = new GameObject();
 		game_object[i]->setPosition(vec3(xPosition, -2.8, 0.0f));
 		xPosition += 2.0f;
 	}
-	playerObject = new GameObject();
-	playerObject->setPosition(vec3(-4.0f, -0.8, 0.0f));
 
-	obstacleObject[0] = new GameObject();
-	obstacleObject[0]->setPosition(vec3(6.0f, -0.8f, 0.0f));
+	for (int i = 0; i < 5; i++)
+	{
+		rampsObjects[i] = new GameObject();
+		rampsObjects[i]->setPosition(vec3(xpositionRamps, ypositionRamps, 0.0f));
+		xpositionRamps += 4.0f;
+		ypositionRamps += 2.0f;
+	}
+	for (int i = 5; i < 20; i++)
+	{
+		rampsObjects[i] = new GameObject();
+		rampsObjects[i]->setPosition(vec3(-2.0, -4.8f, 0.0f));
 
-	obstacleObject[1] = new GameObject();
-	obstacleObject[1]->setPosition(vec3(12.0f, -0.8f, 0.0f));
+	}
+		playerObject = new GameObject();
+		playerObject->setPosition(vec3(-4.0f, -0.8, 0.0f));
+	
+	for (int i = 0; i < 3; i++)
+	{
 
-	obstacleObject[2] = new GameObject();
-	obstacleObject[2]->setPosition(vec3(15.0f, -0.8f, 0.0f));
+		obstacleObject[i] = new GameObject();
+		obstacleObject[i]->setPosition(vec3(obstacleXPosition, -0.8f, 0.0f));
+		obstacleXPosition += 25.0f;
 
+	}
 	//set the initial state
 	m_moveState = MoveStates::Stationary;
 	m_blockMove = AiMove::MoveUp;
@@ -228,6 +248,9 @@ void Game::run()
 
 void Game::initialize()
 {
+	
+	x_offset = { 0.0f }, y_offset = { -2.0f }, z_offset = { -10.0f }; // offset on screen (Vertex Shader)
+	m_maxHeight = { playerObject->getPosition().y + 3.0f };
 	isRunning = true;
 	GLint isCompiled = 0;
 	GLint isLinked = 0;
@@ -420,6 +443,11 @@ void Game::initialize()
 		1.0f					// Identity Matrix for the obstacle
 	);
 
+	modelRamps = mat4(
+		1.0f					// Identity Matrix for the obstacle
+	);
+
+
 	//Player Model matrix
 	//modelPlayer = mat4(
 	//	1.0f					//Player Identity Matrix
@@ -435,34 +463,82 @@ void Game::initialize()
 
 void Game::update()
 {
+	if (playerObject->getPosition().x +1.0f >= 16.8 && playerObject->getPosition().x <= 18.8f +1.0f)
+	{
+		m_groundPos = 1.2f;
+		newHeight = true;
+	}
+	else
+	{
+		m_groundPos = -0.8f; 
+		
+	}
+	if (newHeight == true)
+	{
+		m_maxHeight = { playerObject->getPosition().y + 3.0f };
+		newHeight = false;
+	}
 
 
+	std::cout << m_groundPos << std::endl;
 
+	if (m_view == 2)
+	{
+		x_offset = { 10.0f }, y_offset = { -10.0f }, z_offset = { -10.0f }; // offset on screen (Vertex Shader)
+	}
 
-
+	if (m_view == 1)
+	{
+		x_offset = { 0.0f }, y_offset = { -2.0f }, z_offset = { -10.0f }; // offset on screen (Vertex Shader)
+	}
+	
 	//if the d key is pressed
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
 	{
 		//move the player model to the right
-		playerObject->setPosition(vec3(playerObject->getPosition().x + 0.05f, playerObject->getPosition().y, playerObject->getPosition().z));
-		
-		view = lookAt(
-			vec3(playerObject->getPosition().x - x_offset, playerObject->getPosition().y - y_offset, playerObject->getPosition().z - z_offset),	// Camera (x,y,z), in World Space
-			vec3(playerObject->getPosition().x, playerObject->getPosition().y, playerObject->getPosition().z),		// Camera looking at origin
-			vec3(0.0f, 1.0f, 0.0f)		// 0.0f, 1.0f, 0.0f Look Down and 0.0f, -1.0f, 0.0f Look Up
-		);
+		playerObject->setPosition(vec3(playerObject->getPosition().x + 0.02f, playerObject->getPosition().y, playerObject->getPosition().z));
+
+		if (m_view == 1)
+		{
+
+			view = lookAt(
+				vec3(playerObject->getPosition().x - x_offset, playerObject->getPosition().y - y_offset, playerObject->getPosition().z - z_offset),	// Camera (x,y,z), in World Space
+				vec3(playerObject->getPosition().x, playerObject->getPosition().y, playerObject->getPosition().z),		// Camera looking at origin
+				vec3(0.0f, 1.0f, 0.0f)
+			);
+		}
+		if (m_view == 2)
+		{
+			view = lookAt(
+				vec3(playerObject->getPosition().x - x_offset, playerObject->getPosition().y - y_offset, playerObject->getPosition().z - z_offset),	// Camera (x,y,z), in World Space
+				vec3(playerObject->getPosition().x, playerObject->getPosition().y, playerObject->getPosition().z),		// Camera looking at origin
+				vec3(0.0f, 1.0f, 0.0f)		// 0.0f, 1.0f, 0.0f Look Down and 0.0f, -1.0f, 0.0f Look Up
+			);
+		}
 	}
 	//when the a is pressed move to the left
 	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
 	{
 		//move the player model to the left
-		playerObject->setPosition(vec3(playerObject->getPosition().x - 0.05f, playerObject->getPosition().y, playerObject->getPosition().z));
-
-		view = lookAt(
-			vec3(playerObject->getPosition().x - x_offset, playerObject->getPosition().y - y_offset, playerObject->getPosition().z - z_offset),	// Camera (x,y,z), in World Space
-			vec3(playerObject->getPosition().x, playerObject->getPosition().y, playerObject->getPosition().z),		// Camera looking at origin
-			vec3(0.0f, 1.0f, 0.0f)
-		);
+		playerObject->setPosition(vec3(playerObject->getPosition().x - 0.02f, playerObject->getPosition().y, playerObject->getPosition().z));
+		
+		if (m_view == 1)
+		{
+			
+			view = lookAt(
+				vec3(playerObject->getPosition().x - x_offset, playerObject->getPosition().y - y_offset, playerObject->getPosition().z - z_offset),	// Camera (x,y,z), in World Space
+				vec3(playerObject->getPosition().x, playerObject->getPosition().y, playerObject->getPosition().z),		// Camera looking at origin
+				vec3(0.0f, 1.0f, 0.0f)
+			);
+		}
+		if (m_view == 2)
+		{
+			view = lookAt(
+				vec3(playerObject->getPosition().x - x_offset, playerObject->getPosition().y - y_offset, playerObject->getPosition().z - z_offset),	// Camera (x,y,z), in World Space
+				vec3(playerObject->getPosition().x, playerObject->getPosition().y, playerObject->getPosition().z),		// Camera looking at origin
+				vec3(0.0f, 1.0f, 0.0f)
+			);
+		}
 	}
 	//switch statement for the jumping states
 	switch (m_moveState)
@@ -481,7 +557,7 @@ void Game::update()
 	
 		playerObject->setPosition(vec3(playerObject->getPosition().x, playerObject->getPosition().y + 0.01f, playerObject->getPosition().z));
 		//if the player model is greater than or equal to 0.5
-		if (playerObject->getPosition().y >= 1.0f)
+		if (playerObject->getPosition().y >= m_maxHeight)
 		{
 			//then set the state to falling
 			m_moveState = MoveStates::Falling;
@@ -489,7 +565,7 @@ void Game::update()
 		break;
 	case MoveStates::Falling:
 		//if its greater than -0.8 the cause the player to fall 
-		if (playerObject->getPosition().y >= -0.8f)
+		if (playerObject->getPosition().y >= m_groundPos)
 		{
 			//move down till -0.8
 			playerObject->setPosition(vec3(playerObject->getPosition().x, playerObject->getPosition().y - 0.01, playerObject->getPosition().z));
@@ -538,19 +614,54 @@ void Game::update()
 				m_blockMove = AiMove::MoveUp;
 				m_timer = 0;
 			}
-
+			
 			break;
 
 		}
 	}
-	std::cout << playerObject->getPosition().x << " " << playerObject->getPosition().y << std::endl;
-	
-	if (obstacleObject[0]->getPosition().y >= -0.8f && obstacleObject[0]->getPosition().y <= -0.6f
-			&& playerObject->getPosition().x >= 4.8f && playerObject->getPosition().x <= 6.2f)
+	/*std::cout << playerObject->getPosition().x << " " << playerObject->getPosition().y << std::endl;*/
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
 	{
-			playerObject->setPosition(vec3(-4.0f, -0.8f, 0.0f));
+		m_view = 1;
+	}
+	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
+	{
+		m_view = 2;
+	}
+	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
+	{
+		m_view = 3;
+	}
+
+	if (m_view == 2)
+	{
+		view = lookAt(
+			vec3(playerObject->getPosition().x - x_offset, playerObject->getPosition().y - y_offset, playerObject->getPosition().z - z_offset),	// Camera (x,y,z), in World Space
+			vec3(playerObject->getPosition().x, playerObject->getPosition().y, playerObject->getPosition().z),		// Camera looking at origin
+			vec3(0.0f, 1.0f, 0.0f)		// 0.0f, 1.0f, 0.0f Look Down and 0.0f, -1.0f, 0.0f Look Up
+		);
 
 	}
+	if (m_view == 1)
+	{
+		view = lookAt(
+			vec3(playerObject->getPosition().x - x_offset, playerObject->getPosition().y - y_offset, playerObject->getPosition().z - z_offset),	// Camera (x,y,z), in World Space
+			vec3(playerObject->getPosition().x, playerObject->getPosition().y, playerObject->getPosition().z),		// Camera looking at origin
+			vec3(0.0f, 1.0f, 0.0f)		// 0.0f, 1.0f, 0.0f Look Down and 0.0f, -1.0f, 0.0f Look Up
+		);
+
+	}
+
+	view = lookAt(
+		vec3(playerObject->getPosition().x - x_offset, playerObject->getPosition().y - y_offset, playerObject->getPosition().z - z_offset),	// Camera (x,y,z), in World Space
+		vec3(playerObject->getPosition().x, playerObject->getPosition().y, playerObject->getPosition().z),		// Camera looking at origin
+		vec3(0.0f, 1.0f, 0.0f)
+	);
+
+	
+
+	obstacleCollision();
+
 
 #if (DEBUG >= 2)
 	DEBUG_MSG("Updating...");
@@ -561,6 +672,7 @@ void Game::update()
 	mvp = projection * view * model;
 	mvpPlayer = projection * view * modelPlayer;
 	mvpObstacle = projection * view * modelObstacle;
+	mvpRamps = projection * view * modelRamps;
 	/*DEBUG_MSG(model[0].x);
 	DEBUG_MSG(model[0].y);
 	DEBUG_MSG(model[0].z);*/
@@ -700,6 +812,18 @@ void Game::render()
 
 		glDrawElements(GL_TRIANGLES, 3 * INDICES, GL_UNSIGNED_INT, NULL);
 	}
+
+
+	glUniformMatrix4fv(mvpID, 1, GL_FALSE, &mvpRamps[0][0]);
+
+	for (int i = 0; i < 20; i++)
+	{
+		glUniform1f(x_offsetID, rampsObjects[i]->getPosition().x);
+		glUniform1f(y_offsetID, rampsObjects[i]->getPosition().y);
+		glUniform1f(y_offsetID, rampsObjects[i]->getPosition().y);
+
+		glDrawElements(GL_TRIANGLES, 3 * INDICES, GL_UNSIGNED_INT, NULL);
+	}
 	
 	/*window.draw(playerRect);*/
 	window.display();
@@ -750,4 +874,41 @@ void Game::setUpcontent()
 	sf::RectangleShape playerRect;
 	sf::RectangleShape obstacleRect;
 	groundRect.setPosition(game_object[0]->getPosition().x, game_object[0]->getPosition().y);*/
+}
+void Game::obstacleCollision()
+{
+	
+	
+	/*if (playerObject->getPosition().y >= obstacleObject[0]->getPosition().y
+		&& playerObject->getPosition().x - >= obstacleObject[0]->getPosition().x
+		)
+	{
+		playerObject->setPosition(vec3(-4.0f, -0.8f, 0.0f));
+
+	}*/
+
+
+
+
+
+
+
+	if (obstacleObject[0]->getPosition().y >= -0.8f && obstacleObject[0]->getPosition().y <= -0.4f
+		&& playerObject->getPosition().x >= 4.8f && playerObject->getPosition().x <= 6.2f)
+	{
+		playerObject->setPosition(vec3(-4.0f, -0.8f, 0.0f));
+
+	}
+	else if (obstacleObject[1]->getPosition().y >= -0.8f && obstacleObject[0]->getPosition().y <= -0.6f
+		&& playerObject->getPosition().x >= 29.8f - 1.0f&& playerObject->getPosition().x <= 31.8f)
+	{
+		playerObject->setPosition(vec3(-4.0f, -0.8f, 0.0f));
+
+	}
+	else if (obstacleObject[1]->getPosition().y >= -0.8f && obstacleObject[0]->getPosition().y <= -0.6f
+		&& playerObject->getPosition().x >= 54.8f - 1.0f&& playerObject->getPosition().x <= 56.8f)
+	{
+		playerObject->setPosition(vec3(-4.0f, -0.8f, 0.0f));
+
+	}
 }
