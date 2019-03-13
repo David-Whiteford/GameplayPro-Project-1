@@ -52,6 +52,13 @@ modelObstacle;
 mat4 mvpRamps,
 modelRamps;
 
+mat4 mvpMovingobs,
+modelMovingobs;
+
+
+mat4 mvpObjective,
+modelObjective;
+
 Font font;						// Game font
 
 
@@ -73,7 +80,7 @@ Game::Game(sf::ContextSettings settings) :
 {
 	//set up the array of ground / stationary objects and their positions
 
-
+	//set up the objects
 	float xPosition{ -4.0f };
 
 	float xpositionRamps{ 17.0f };
@@ -85,23 +92,32 @@ Game::Game(sf::ContextSettings settings) :
 		game_object[i]->setPosition(vec3(xPosition, -2.8, 0.0f));
 		xPosition += 2.0f;
 	}
-
-	for (int i = 0; i < 5; i++)
+	//loop to set up the ojects ramp
+	for (int i = 0; i < 3; i++)
 	{
 		rampsObjects[i] = new GameObject();
 		rampsObjects[i]->setPosition(vec3(xpositionRamps, ypositionRamps, 0.0f));
-		xpositionRamps += 4.0f;
+		xpositionRamps += 2.0f;
 		ypositionRamps += 2.0f;
 	}
-	for (int i = 5; i < 20; i++)
+	/// <summary>
+	/// loop between 3 and 7 to set up ramps
+	/// </summary>
+	float xpositionRamps1{ 43.0f };
+	float ypositionRamps1{ -0.8f };
+	for (int i = 3; i < 7; i++)
 	{
 		rampsObjects[i] = new GameObject();
-		rampsObjects[i]->setPosition(vec3(-2.0, -4.8f, 0.0f));
-
+		rampsObjects[i]->setPosition(vec3(xpositionRamps1, ypositionRamps1, 0.0f));
+		xpositionRamps1 += 3.0f;
+		ypositionRamps1 += 3.0f;
 	}
-		playerObject = new GameObject();
-		playerObject->setPosition(vec3(-4.0f, -0.8, 0.0f));
-	
+	//set up the player
+	playerObject = new GameObject();
+	playerObject->setPosition(vec3(-4.0f, -0.8, 0.0f));
+	/// <summary>
+	/// loop to set up obstacles
+	/// </summary>
 	for (int i = 0; i < 3; i++)
 	{
 
@@ -110,6 +126,22 @@ Game::Game(sf::ContextSettings settings) :
 		obstacleXPosition += 25.0f;
 
 	}
+	//loop to set up moving obstacles
+	float posmoveX{ 27.5f };
+	for (int i = 0; i < 3; i++)
+	{
+
+		movingobstacleObject[i] = new GameObject();
+		movingobstacleObject[i]->setPosition(vec3(posmoveX, -0.8f, 0.0f));
+		posmoveX += 30.0f;
+		
+	}
+	//set up objective
+	objective[0] = new GameObject();
+	objective[0]->setPosition(vec3(90.0f, -0.8f, 0.0f));
+	objective[1] = new GameObject();
+	objective[1]->setPosition(vec3(90.0f, 1.2f, 0.0f));
+	
 	//set the initial state
 	m_moveState = MoveStates::Stationary;
 	m_blockMove = AiMove::MoveUp;
@@ -250,7 +282,7 @@ void Game::initialize()
 {
 	
 	x_offset = { 0.0f }, y_offset = { -2.0f }, z_offset = { -10.0f }; // offset on screen (Vertex Shader)
-	m_maxHeight = { playerObject->getPosition().y + 3.0f };
+	m_maxHeight = { playerObject->getPosition().y + 5.0f };
 	isRunning = true;
 	GLint isCompiled = 0;
 	GLint isLinked = 0;
@@ -447,6 +479,13 @@ void Game::initialize()
 		1.0f					// Identity Matrix for the obstacle
 	);
 
+	modelMovingobs = mat4(
+		1.0f					// Identity Matrix for the obstacle
+	);
+	
+	modelObjective = mat4(
+			1.0f					// Identity Matrix for the obstacle
+		);
 
 	//Player Model matrix
 	//modelPlayer = mat4(
@@ -463,24 +502,10 @@ void Game::initialize()
 
 void Game::update()
 {
-	if (playerObject->getPosition().x +1.0f >= 16.8 && playerObject->getPosition().x <= 18.8f +1.0f)
-	{
-		m_groundPos = 1.2f;
-		newHeight = true;
-	}
-	else
-	{
-		m_groundPos = -0.8f; 
-		
-	}
-	if (newHeight == true)
-	{
-		m_maxHeight = { playerObject->getPosition().y + 3.0f };
-		newHeight = false;
-	}
-
-
-	std::cout << m_groundPos << std::endl;
+	
+	movingblockCollision();
+	rampsCollision();
+	/*objectiveCollision();*/
 
 	if (m_view == 2)
 	{
@@ -496,49 +521,17 @@ void Game::update()
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
 	{
 		//move the player model to the right
-		playerObject->setPosition(vec3(playerObject->getPosition().x + 0.02f, playerObject->getPosition().y, playerObject->getPosition().z));
-
-		if (m_view == 1)
-		{
-
-			view = lookAt(
-				vec3(playerObject->getPosition().x - x_offset, playerObject->getPosition().y - y_offset, playerObject->getPosition().z - z_offset),	// Camera (x,y,z), in World Space
-				vec3(playerObject->getPosition().x, playerObject->getPosition().y, playerObject->getPosition().z),		// Camera looking at origin
-				vec3(0.0f, 1.0f, 0.0f)
-			);
-		}
-		if (m_view == 2)
-		{
-			view = lookAt(
-				vec3(playerObject->getPosition().x - x_offset, playerObject->getPosition().y - y_offset, playerObject->getPosition().z - z_offset),	// Camera (x,y,z), in World Space
-				vec3(playerObject->getPosition().x, playerObject->getPosition().y, playerObject->getPosition().z),		// Camera looking at origin
-				vec3(0.0f, 1.0f, 0.0f)		// 0.0f, 1.0f, 0.0f Look Down and 0.0f, -1.0f, 0.0f Look Up
-			);
-		}
+		playerObject->setPosition(vec3(playerObject->getPosition().x + 0.01f, playerObject->getPosition().y, playerObject->getPosition().z));
+		
 	}
 	//when the a is pressed move to the left
 	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
 	{
+
+		/*playerRect.setPosition(playerRect.getPosition().x - 0.02f, playerRect.getPosition().y);*/
 		//move the player model to the left
-		playerObject->setPosition(vec3(playerObject->getPosition().x - 0.02f, playerObject->getPosition().y, playerObject->getPosition().z));
-		
-		if (m_view == 1)
-		{
-			
-			view = lookAt(
-				vec3(playerObject->getPosition().x - x_offset, playerObject->getPosition().y - y_offset, playerObject->getPosition().z - z_offset),	// Camera (x,y,z), in World Space
-				vec3(playerObject->getPosition().x, playerObject->getPosition().y, playerObject->getPosition().z),		// Camera looking at origin
-				vec3(0.0f, 1.0f, 0.0f)
-			);
-		}
-		if (m_view == 2)
-		{
-			view = lookAt(
-				vec3(playerObject->getPosition().x - x_offset, playerObject->getPosition().y - y_offset, playerObject->getPosition().z - z_offset),	// Camera (x,y,z), in World Space
-				vec3(playerObject->getPosition().x, playerObject->getPosition().y, playerObject->getPosition().z),		// Camera looking at origin
-				vec3(0.0f, 1.0f, 0.0f)
-			);
-		}
+		playerObject->setPosition(vec3(playerObject->getPosition().x - 0.01f, playerObject->getPosition().y, playerObject->getPosition().z));
+
 	}
 	//switch statement for the jumping states
 	switch (m_moveState)
@@ -554,8 +547,8 @@ void Game::update()
 		//jumping state
 	case MoveStates::Jumping:
 		//moves the player model up the screen
-	
 		playerObject->setPosition(vec3(playerObject->getPosition().x, playerObject->getPosition().y + 0.01f, playerObject->getPosition().z));
+		playerRect.setPosition(playerRect.getPosition().x , playerRect.getPosition().y + 0.01f);
 		//if the player model is greater than or equal to 0.5
 		if (playerObject->getPosition().y >= m_maxHeight)
 		{
@@ -568,18 +561,20 @@ void Game::update()
 		if (playerObject->getPosition().y >= m_groundPos)
 		{
 			//move down till -0.8
-			playerObject->setPosition(vec3(playerObject->getPosition().x, playerObject->getPosition().y - 0.01, playerObject->getPosition().z));
+			playerObject->setPosition(vec3(playerObject->getPosition().x, playerObject->getPosition().y - 0.01f, playerObject->getPosition().z));
+			playerRect.setPosition(playerRect.getPosition().x, playerRect.getPosition().y - 0.01f);
 		}
 		//at -0.8 then set the state to staionary
-		else if (playerObject->getPosition().y <= -0.8f)
+		else if (playerObject->getPosition().y <= m_groundPos)
 		{
+			m_maxHeight = { playerObject->getPosition().y + 5.0f };
 			m_moveState = MoveStates::Stationary;
 		}
 		break;
 	}
 
 	//timer for the obstacle movement
-	if (m_timer < 1200)
+	if (m_timer < 1500)
 	{
 		m_timer++;
 	}
@@ -588,30 +583,36 @@ void Game::update()
 	{
 		switch (m_blockMove)
 		{
+			//switch to move up the screen 
 		case AiMove::MoveUp:
-
+			//if the obstacle is less than 1.8
 			if (obstacleObject[i]->getPosition().y <= 1.8f)
-			{
-				
+			{	
+				//moves up the screen 
 				obstacleObject[i]->setPosition(vec3(obstacleObject[i]->getPosition().x, obstacleObject[i]->getPosition().y + 0.01f, obstacleObject[i]->getPosition().z));
 			}
+			//if the obstacle is greater than 1.8
 			if (obstacleObject[i]->getPosition().y >= 1.8f)
 			{
-				
+				//moves down  the screen
 				obstacleObject[i]->setPosition(vec3(obstacleObject[i]->getPosition().x, obstacleObject[i]->getPosition().y - 0.01f, obstacleObject[i]->getPosition().z));
+				//switch to the move down screen 
 				m_blockMove = AiMove::MoveDown;
 			}
 			break;
 		case AiMove::MoveDown:
-
-			if (m_timer == 1200 && obstacleObject[i]->getPosition().y >= -0.8f)
+			//the timer is 1500 and is gretaer than the ground
+			if (m_timer == 1500 && obstacleObject[i]->getPosition().y >= -0.8f)
 			{
-				
-				obstacleObject[i]->setPosition(vec3(obstacleObject[i]->getPosition().x, obstacleObject[i]->getPosition().y - 0.02f, obstacleObject[i]->getPosition().z));
+				//move down
+				obstacleObject[i]->setPosition(vec3(obstacleObject[i]->getPosition().x, obstacleObject[i]->getPosition().y - 0.01f, obstacleObject[i]->getPosition().z));
 			}
+			//when at the ground 
 			else if (obstacleObject[i]->getPosition().y <= -0.8f)
 			{
+				//switch to move up
 				m_blockMove = AiMove::MoveUp;
+				//reset timer
 				m_timer = 0;
 			}
 			
@@ -619,7 +620,7 @@ void Game::update()
 
 		}
 	}
-	/*std::cout << playerObject->getPosition().x << " " << playerObject->getPosition().y << std::endl;*/
+	//it does the key presses for the view
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
 	{
 		m_view = 1;
@@ -637,7 +638,7 @@ void Game::update()
 	{
 		view = lookAt(
 			vec3(playerObject->getPosition().x - x_offset, playerObject->getPosition().y - y_offset, playerObject->getPosition().z - z_offset),	// Camera (x,y,z), in World Space
-			vec3(playerObject->getPosition().x, playerObject->getPosition().y, playerObject->getPosition().z),		// Camera looking at origin
+			vec3(playerObject->getPosition().x, playerObject->getPosition().y, playerObject->getPosition().z),		// Camera looking at player
 			vec3(0.0f, 1.0f, 0.0f)		// 0.0f, 1.0f, 0.0f Look Down and 0.0f, -1.0f, 0.0f Look Up
 		);
 
@@ -646,7 +647,7 @@ void Game::update()
 	{
 		view = lookAt(
 			vec3(playerObject->getPosition().x - x_offset, playerObject->getPosition().y - y_offset, playerObject->getPosition().z - z_offset),	// Camera (x,y,z), in World Space
-			vec3(playerObject->getPosition().x, playerObject->getPosition().y, playerObject->getPosition().z),		// Camera looking at origin
+			vec3(playerObject->getPosition().x, playerObject->getPosition().y, playerObject->getPosition().z),		// Camera looking at player
 			vec3(0.0f, 1.0f, 0.0f)		// 0.0f, 1.0f, 0.0f Look Down and 0.0f, -1.0f, 0.0f Look Up
 		);
 
@@ -654,10 +655,10 @@ void Game::update()
 
 	view = lookAt(
 		vec3(playerObject->getPosition().x - x_offset, playerObject->getPosition().y - y_offset, playerObject->getPosition().z - z_offset),	// Camera (x,y,z), in World Space
-		vec3(playerObject->getPosition().x, playerObject->getPosition().y, playerObject->getPosition().z),		// Camera looking at origin
+		vec3(playerObject->getPosition().x, playerObject->getPosition().y, playerObject->getPosition().z),		// Camera looking at player
 		vec3(0.0f, 1.0f, 0.0f)
 	);
-
+	
 	
 
 	obstacleCollision();
@@ -673,6 +674,10 @@ void Game::update()
 	mvpPlayer = projection * view * modelPlayer;
 	mvpObstacle = projection * view * modelObstacle;
 	mvpRamps = projection * view * modelRamps;
+	mvpMovingobs = projection * view * modelMovingobs;
+	mvpObjective = projection * view * modelObjective;
+
+
 	/*DEBUG_MSG(model[0].x);
 	DEBUG_MSG(model[0].y);
 	DEBUG_MSG(model[0].z);*/
@@ -682,6 +687,9 @@ void Game::update()
 
 void Game::render()
 {
+	
+
+
 
 #if (DEBUG >= 2)
 	DEBUG_MSG("Render Loop...");
@@ -708,6 +716,8 @@ void Game::render()
 	text.setFillColor(sf::Color(255, 255, 255, 170));
 	text.setPosition(50.f, 50.f);
 
+	window.draw(groundRect);
+	window.draw(playerRect);
 	window.draw(text);
 
 	// Restore OpenGL render states
@@ -783,7 +793,7 @@ void Game::render()
 	glEnableVertexAttribArray(positionID);
 	glEnableVertexAttribArray(colorID);
 	glEnableVertexAttribArray(uvID);
-	//run through a for loop to draw two cubes
+	//run through a for loop to draw  cubes
 	for (int i = 0; i < 50; i++)
 	{
 		glUniform1f(x_offsetID, game_object[i]->getPosition().x);
@@ -794,7 +804,7 @@ void Game::render()
 		glDrawElements(GL_TRIANGLES, 3 * INDICES, GL_UNSIGNED_INT, NULL);
 	}
 	
-
+	//set up mvp for player block
 	glUniformMatrix4fv(mvpID, 1, GL_FALSE, &mvpPlayer[0][0]);
 
 	glUniform1f(x_offsetID, playerObject->getPosition().x);
@@ -802,8 +812,9 @@ void Game::render()
 	glUniform1f(y_offsetID, playerObject->getPosition().y);
 
 	glDrawElements(GL_TRIANGLES, 3 * INDICES, GL_UNSIGNED_INT, NULL);
-	
+	//set up mvp for obstacles blocks
 	glUniformMatrix4fv(mvpID, 1, GL_FALSE, &mvpObstacle[0][0]);
+	//run through a for loop to draw  cubes
 	for (int i = 0; i < 3; i++)
 	{
 		glUniform1f(x_offsetID, obstacleObject[i]->getPosition().x);
@@ -815,8 +826,8 @@ void Game::render()
 
 
 	glUniformMatrix4fv(mvpID, 1, GL_FALSE, &mvpRamps[0][0]);
-
-	for (int i = 0; i < 20; i++)
+	//run through a for loop to draw  cubes
+	for (int i = 0; i < 7; i++)
 	{
 		glUniform1f(x_offsetID, rampsObjects[i]->getPosition().x);
 		glUniform1f(y_offsetID, rampsObjects[i]->getPosition().y);
@@ -824,6 +835,28 @@ void Game::render()
 
 		glDrawElements(GL_TRIANGLES, 3 * INDICES, GL_UNSIGNED_INT, NULL);
 	}
+	//set up mvp for moving blocks
+	glUniformMatrix4fv(mvpID, 1, GL_FALSE, &mvpMovingobs[0][0]);
+	//run through a for loop to draw  cubes
+	for (int i = 0; i < 3; i++)
+	{
+		glUniform1f(x_offsetID, movingobstacleObject[i]->getPosition().x);
+		glUniform1f(y_offsetID, movingobstacleObject[i]->getPosition().y);
+		glUniform1f(y_offsetID, movingobstacleObject[i]->getPosition().y);
+
+		glDrawElements(GL_TRIANGLES, 3 * INDICES, GL_UNSIGNED_INT, NULL);
+	}
+	glUniformMatrix4fv(mvpID, 1, GL_FALSE, &mvpObjective[0][0]);
+	for (int i = 0; i <2; i++)
+	{
+		glUniform1f(x_offsetID, objective[i]->getPosition().x);
+		glUniform1f(y_offsetID, objective[i]->getPosition().y);
+		glUniform1f(y_offsetID, objective[i]->getPosition().y);
+
+		glDrawElements(GL_TRIANGLES, 3 * INDICES, GL_UNSIGNED_INT, NULL);
+	}
+
+
 	
 	/*window.draw(playerRect);*/
 	window.display();
@@ -863,52 +896,193 @@ void Game::unload()
 }
 void Game::setUpcontent()
 {
-	/*if (!texture.loadFromFile("Assets\\Textures\\square.png"))
-	{
-		std::cout << "Cant load square image " << std::endl;
-	}
-
+	playerRect.setFillColor(sf::Color::Yellow);
 	playerRect.setSize(sf::Vector2f(50.0f,50.0f));
-	playerRect.setPosition(playerObject->getPosition().x, playerObject->getPosition().y);
+	playerRect.setPosition(300.0f, 290.0f);
 
-	sf::RectangleShape playerRect;
-	sf::RectangleShape obstacleRect;
-	groundRect.setPosition(game_object[0]->getPosition().x, game_object[0]->getPosition().y);*/
+	groundRect.setFillColor(sf::Color::Red);
+	groundRect.setSize(sf::Vector2f(50.0f, 50.0f));
+	groundRect.setPosition(300.0f, 341.0f);
+
+	/*obstacleRect*/
+
+	/*groundRect.setPosition(game_object[0]->getPosition().x, game_object[0]->getPosition().y);*/
 }
 void Game::obstacleCollision()
 {
+	/// <summary>
+	/// checks the collision between the player and obstacle 0
+	/// </summary>
+	if(playerObject->getPosition().x  + 1 >= obstacleObject[0]->getPosition().x -1  &&
+		obstacleObject[0]->getPosition().x + 1 >= playerObject->getPosition().x - 1 &&
+		playerObject->getPosition().y + 1 >= obstacleObject[0]->getPosition().y - 1 &&
+		obstacleObject[0]->getPosition().y + 1 >= playerObject->getPosition().y - 1)
+	{
 	
+		playerObject->setPosition(vec3(-4.0f, -0.8f, 0.0f));
+
+	}
+	/// <summary>
+	/// checks the collision between the player and obstacle 1
+	/// </summary>
+	else if (playerObject->getPosition().x + 1 >= obstacleObject[1]->getPosition().x - 1 &&
+		obstacleObject[1]->getPosition().x + 1 >= playerObject->getPosition().x - 1 &&
+		playerObject->getPosition().y + 1 >= obstacleObject[1]->getPosition().y - 1 &&
+		obstacleObject[1]->getPosition().y + 1 >= playerObject->getPosition().y - 1)
+	{
+		playerObject->setPosition(vec3(-4.0f, -0.8f, 0.0f));
+	}
+	/// <summary>
+	/// checks the collision between the player and obstacle 2
+	/// </summary>
+	else if (playerObject->getPosition().x + 1 >= obstacleObject[2]->getPosition().x - 1 &&
+		obstacleObject[2]->getPosition().x + 1 >= playerObject->getPosition().x - 1 &&
+		playerObject->getPosition().y + 1 >= obstacleObject[2]->getPosition().y - 1 &&
+		obstacleObject[2]->getPosition().y + 1 >= playerObject->getPosition().y - 1)
+	{
+		playerObject->setPosition(vec3(-4.0f, -0.8f, 0.0f));
+	}
+
+
 	
-	/*if (playerObject->getPosition().y >= obstacleObject[0]->getPosition().y
-		&& playerObject->getPosition().x - >= obstacleObject[0]->getPosition().x
-		)
-	{
-		playerObject->setPosition(vec3(-4.0f, -0.8f, 0.0f));
-
-	}*/
-
-
-
-
-
-
-
-	if (obstacleObject[0]->getPosition().y >= -0.8f && obstacleObject[0]->getPosition().y <= -0.4f
-		&& playerObject->getPosition().x >= 4.8f && playerObject->getPosition().x <= 6.2f)
-	{
-		playerObject->setPosition(vec3(-4.0f, -0.8f, 0.0f));
-
-	}
-	else if (obstacleObject[1]->getPosition().y >= -0.8f && obstacleObject[0]->getPosition().y <= -0.6f
-		&& playerObject->getPosition().x >= 29.8f - 1.0f&& playerObject->getPosition().x <= 31.8f)
-	{
-		playerObject->setPosition(vec3(-4.0f, -0.8f, 0.0f));
-
-	}
-	else if (obstacleObject[1]->getPosition().y >= -0.8f && obstacleObject[0]->getPosition().y <= -0.6f
-		&& playerObject->getPosition().x >= 54.8f - 1.0f&& playerObject->getPosition().x <= 56.8f)
-	{
-		playerObject->setPosition(vec3(-4.0f, -0.8f, 0.0f));
-
-	}
 }
+void Game::rampsCollision()
+{
+	/// <summary>
+	/// checks the collision between the player and ramp 0
+	/// </summary>
+	if (playerObject->getPosition().x + 1 >= rampsObjects[0]->getPosition().x - 1 &&
+		rampsObjects[0]->getPosition().x + 1 >= playerObject->getPosition().x - 1 &&
+		playerObject->getPosition().y + 1 >= rampsObjects[0]->getPosition().y - 1 &&
+		rampsObjects[0]->getPosition().y + 1 >= playerObject->getPosition().y - 1)
+	{
+
+		m_maxHeight = { playerObject->getPosition().y + 5.0f };
+		m_groundPos = 1.2f;
+
+	}
+	/// <summary>
+	/// checks the collision between the player and ramp 1
+	/// </summary>
+	else if (playerObject->getPosition().x + 1 >= rampsObjects[1]->getPosition().x - 1 &&
+		rampsObjects[1]->getPosition().x + 1 >= playerObject->getPosition().x - 1 &&
+		playerObject->getPosition().y + 1 >= rampsObjects[1]->getPosition().y - 1 &&
+		rampsObjects[1]->getPosition().y + 1 >= playerObject->getPosition().y - 1)
+	{
+		m_groundPos = 3.2f;
+
+	}
+	/// <summary>
+	/// checks the collision between the player and ramp 2
+	/// </summary>
+	else if (playerObject->getPosition().x + 1 >= rampsObjects[2]->getPosition().x - 1 &&
+		rampsObjects[2]->getPosition().x + 1 >= playerObject->getPosition().x - 1 &&
+		playerObject->getPosition().y + 1 >= rampsObjects[2]->getPosition().y - 1 &&
+		rampsObjects[2]->getPosition().y + 1 >= playerObject->getPosition().y - 1)
+	{
+		m_groundPos = 6.2f;
+
+	}
+	/// <summary>
+	/// checks the collision between the player and ramp 3
+	/// </summary>
+	else if (playerObject->getPosition().x + 1 >= rampsObjects[3]->getPosition().x - 1 &&
+		rampsObjects[3]->getPosition().x + 1 >= playerObject->getPosition().x - 1 &&
+		playerObject->getPosition().y + 1 >= rampsObjects[3]->getPosition().y - 1 &&
+		rampsObjects[3]->getPosition().y + 1 >= playerObject->getPosition().y - 1)
+	{
+		m_groundPos = 1.2f;
+
+	}
+	/// <summary>
+	/// checks the collision between the player and ramp 4
+	/// </summary>
+	else if (playerObject->getPosition().x + 1 >= rampsObjects[4]->getPosition().x - 1 &&
+		rampsObjects[4]->getPosition().x + 1 >= playerObject->getPosition().x - 1 &&
+		playerObject->getPosition().y + 1 >= rampsObjects[4]->getPosition().y - 1 &&
+		rampsObjects[4]->getPosition().y + 1 >= playerObject->getPosition().y - 1)
+	{
+		m_groundPos = 4.2f;
+
+	}
+	/// <summary>
+	/// checks the collision between the player and ramp 5
+	/// </summary>
+	else if (playerObject->getPosition().x + 1 >= rampsObjects[5]->getPosition().x - 1 &&
+		rampsObjects[5]->getPosition().x + 1 >= playerObject->getPosition().x - 1 &&
+		playerObject->getPosition().y + 1 >= rampsObjects[5]->getPosition().y - 1 &&
+		rampsObjects[5]->getPosition().y + 1 >= playerObject->getPosition().y - 1)
+	{
+		m_groundPos = 7.2f;
+
+	}
+	/// <summary>
+	/// checks the collision between the player and ramp 6
+	/// </summary>
+	else if (playerObject->getPosition().x + 1 >= rampsObjects[6]->getPosition().x - 1 &&
+		rampsObjects[6]->getPosition().x + 1 >= playerObject->getPosition().x - 1 &&
+		playerObject->getPosition().y + 1 >= rampsObjects[6]->getPosition().y - 1 &&
+		rampsObjects[6]->getPosition().y + 1 >= playerObject->getPosition().y - 1)
+	{
+		m_groundPos = 10.2f;
+
+	}
+	//else the ground is at -0.8
+	else
+	{
+		m_groundPos = -0.8;
+
+	}
+
+}
+void Game::movingblockCollision()
+{
+	/// <summary>
+	/// checks the collision between the player and moving obstacles 0
+	/// </summary>
+	if (playerObject->getPosition().x + 1 >= movingobstacleObject[0]->getPosition().x - 1 &&
+		movingobstacleObject[0]->getPosition().x + 1 >= playerObject->getPosition().x - 1 &&
+		playerObject->getPosition().y + 1 >= movingobstacleObject[0]->getPosition().y - 1 &&
+		movingobstacleObject[0]->getPosition().y + 1 >= playerObject->getPosition().y - 1)
+	{
+
+		playerObject->setPosition(vec3(-4.0f, -0.8f, 0.0f));
+
+	}
+    /// <summary>
+	/// checks the collision between the player and moving obstacles 1
+	/// </summary>
+	else if (playerObject->getPosition().x + 1 >= movingobstacleObject[1]->getPosition().x - 1 &&
+		movingobstacleObject[1]->getPosition().x + 1 >= playerObject->getPosition().x - 1 &&
+		playerObject->getPosition().y + 1 >= movingobstacleObject[1]->getPosition().y - 1 &&
+		movingobstacleObject[1]->getPosition().y + 1 >= playerObject->getPosition().y - 1)
+	{
+		playerObject->setPosition(vec3(-4.0f, -0.8f, 0.0f));
+	}
+	/// <summary>
+	/// checks the collision between the player and moving obstacles 2
+	/// </summary>
+	else if (playerObject->getPosition().x + 1 >= movingobstacleObject[2]->getPosition().x - 1 &&
+		movingobstacleObject[2]->getPosition().x + 1 >= playerObject->getPosition().x - 1 &&
+		playerObject->getPosition().y + 1 >= movingobstacleObject[2]->getPosition().y - 1 &&
+		movingobstacleObject[2]->getPosition().y + 1 >= playerObject->getPosition().y - 1)
+	{
+		playerObject->setPosition(vec3(-4.0f, -0.8f, 0.0f));
+	}
+
+}
+//void Game::objectiveCollision()
+//{
+//	for (i = 0; i < 2; i++)
+//	{
+//		if (playerObject->getPosition().x + 1 >= objective[i]->getPosition().x - 1 &&
+//			objective[i]->getPosition().x + 1 >= playerObject->getPosition().x - 1 &&
+//			playerObject->getPosition().y + 1 >= objective[i]->getPosition().y - 1 &&
+//			objective[i]->getPosition().y + 1 >= playerObject->getPosition().y - 1)
+//		{
+//			playerObject->setPosition(vec3(-4.0f, -0.8f, 0.0f));
+//
+//		}
+//	}
+//
+//}

@@ -41,11 +41,13 @@ private:
 	GameObject* game_object[50];
 	GameObject* playerObject;
 	GameObject* obstacleObject[3];
-	GameObject* rampsObjects[20];
+	GameObject* movingobstacleObject[3];
+	GameObject* rampsObjects[7];
+	GameObject* objective[2];
 	RenderWindow window;
 	sf::Texture texture;
 	sf::RectangleShape playerRect;
-	sf::RectangleShape obstacleRect;
+	sf::RectangleShape groundRect;
 
 	c2AABB aabb_ground;
 	c2AABB aabb_player;
@@ -62,6 +64,7 @@ private:
 	float x_offset, y_offset, z_offset;
 	int m_view{ 0 };
 	float m_maxHeight{ 0.0f };
+	int m_doOnce{ 0 };
 	bool newHeight{ false };
 	bool isRunning = false;
 	int m_timer{ 0 };
@@ -71,6 +74,9 @@ private:
 	void unload();
 	void setUpcontent();
 	void obstacleCollision();
+	void rampsCollision();
+	void movingblockCollision();
+	void objectiveCollision();
 	enum AiMove
 	{
 		MoveUp,
