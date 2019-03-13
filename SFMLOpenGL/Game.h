@@ -38,13 +38,13 @@ public:
 	void run();
 	
 private:
-	GameObject* game_object[6];
+	GameObject* game_object[50];
 	GameObject* playerObject;
 	GameObject* obstacleObject[3];
 	RenderWindow window;
 	sf::Texture texture;
-	sf::Sprite playerRect;
-	sf::Sprite groundRect;
+	sf::RectangleShape playerRect;
+	sf::RectangleShape obstacleRect;
 
 	c2AABB aabb_ground;
 	c2AABB aabb_player;

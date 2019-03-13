@@ -51,7 +51,7 @@ modelObstacle;
 
 Font font;						// Game font
 
-float x_offset{ 10.0f }, y_offset{ 1.0f }, z_offset{ -10.0f }; // offset on screen (Vertex Shader)
+float x_offset{ 10.0f }, y_offset{ -10.0f }, z_offset{ -10.0f }; // offset on screen (Vertex Shader)
 
 Game::Game() : 
 	window(VideoMode(800, 600), 
@@ -69,27 +69,15 @@ Game::Game(sf::ContextSettings settings) :
 	//blocks are 2.0 wide
 {
 	//set up the array of ground / stationary objects and their positions
-	game_object[0] = new GameObject();
-	game_object[0]->setPosition(vec3(-4.0f, -2.8, 0.0f));
 
-	game_object[1] = new GameObject();
-	game_object[1]->setPosition(vec3(2.0f, -2.8, 0.0f));
 
-	game_object[2] = new GameObject();
-	game_object[2]->setPosition(vec3(4.0f, -2.8, 0.0f));
-
-	game_object[3] = new GameObject();
-	game_object[3]->setPosition(vec3(6.0f, -2.8, 0.0f));
-
-	game_object[4] = new GameObject();
-	game_object[4]->setPosition(vec3(8.0f, -2.8, 0.0f));
-
-	game_object[5] = new GameObject();
-	game_object[5]->setPosition(vec3(12.0f, -2.8, 0.0f));
-
-	game_object[6] = new GameObject();
-	game_object[6]->setPosition(vec3(14.0f, -2.8, 0.0f));
-	//set up the object for player and the obstacles and set their positions
+	float xPosition{ -4.0f };
+	for (int i = 0; i < 50; i++)
+	{
+		game_object[i] = new GameObject();
+		game_object[i]->setPosition(vec3(xPosition, -2.8, 0.0f));
+		xPosition += 2.0f;
+	}
 	playerObject = new GameObject();
 	playerObject->setPosition(vec3(-4.0f, -0.8, 0.0f));
 
@@ -240,22 +228,6 @@ void Game::run()
 
 void Game::initialize()
 {
-
-
-	
-	aabb_ground.min = c2V(groundRect.getPosition().x, groundRect.getPosition().y);
-	aabb_ground.max = c2V(
-		groundRect.getPosition().x +
-		groundRect.getGlobalBounds().width,
-		groundRect.getPosition().y +
-		groundRect.getGlobalBounds().height);
-
-
-	
-	aabb_player.min = c2V(playerRect.getPosition().x, playerRect.getPosition().y);
-	aabb_player.max = c2V(playerRect.getGlobalBounds().width / 6, playerRect.getGlobalBounds().width / 6);
-
-
 	isRunning = true;
 	GLint isCompiled = 0;
 	GLint isLinked = 0;
@@ -472,28 +444,25 @@ void Game::update()
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
 	{
 		//move the player model to the right
-		modelPlayer = glm::translate(modelPlayer, glm::vec3(0.01f, 0.0f, 0.0f));
-
-		playerObject->setPosition(vec3(playerObject->getPosition().x + 0.01f, playerObject->getPosition().y, playerObject->getPosition().z));
-
-		//view = lookAt(
-		//	vec3(playerObject->getPosition().x - x_offset, playerObject->getPosition().y - z_offset, playerObject->getPosition().z - z_offset),	// Camera (x,y,z), in World Space
-		//	vec3(playerObject->getPosition().x, playerObject->getPosition().y, playerObject->getPosition().z),		// Camera looking at origin
-		//	vec3(0.0f, 1.0f, 0.0f)		// 0.0f, 1.0f, 0.0f Look Down and 0.0f, -1.0f, 0.0f Look Up
-		//);
+		playerObject->setPosition(vec3(playerObject->getPosition().x + 0.05f, playerObject->getPosition().y, playerObject->getPosition().z));
+		
+		view = lookAt(
+			vec3(playerObject->getPosition().x - x_offset, playerObject->getPosition().y - y_offset, playerObject->getPosition().z - z_offset),	// Camera (x,y,z), in World Space
+			vec3(playerObject->getPosition().x, playerObject->getPosition().y, playerObject->getPosition().z),		// Camera looking at origin
+			vec3(0.0f, 1.0f, 0.0f)		// 0.0f, 1.0f, 0.0f Look Down and 0.0f, -1.0f, 0.0f Look Up
+		);
 	}
 	//when the a is pressed move to the left
 	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
 	{
 		//move the player model to the left
-		modelPlayer = glm::translate(modelPlayer, glm::vec3(-0.01f, 0, 0));
-		playerObject->setPosition(vec3(playerObject->getPosition().x - 0.01f, playerObject->getPosition().y, playerObject->getPosition().z));
+		playerObject->setPosition(vec3(playerObject->getPosition().x - 0.05f, playerObject->getPosition().y, playerObject->getPosition().z));
 
-		//view = lookAt(
-		//	vec3(playerObject->getPosition().x - x_offset, playerObject->getPosition().y - z_offset, playerObject->getPosition().z - z_offset),	// Camera (x,y,z), in World Space
-		//	vec3(playerObject->getPosition().x, playerObject->getPosition().y, playerObject->getPosition().z),		// Camera looking at origin
-		//	vec3(0.0f, 1.0f, 0.0f)
-		//);
+		view = lookAt(
+			vec3(playerObject->getPosition().x - x_offset, playerObject->getPosition().y - y_offset, playerObject->getPosition().z - z_offset),	// Camera (x,y,z), in World Space
+			vec3(playerObject->getPosition().x, playerObject->getPosition().y, playerObject->getPosition().z),		// Camera looking at origin
+			vec3(0.0f, 1.0f, 0.0f)
+		);
 	}
 	//switch statement for the jumping states
 	switch (m_moveState)
@@ -509,10 +478,10 @@ void Game::update()
 		//jumping state
 	case MoveStates::Jumping:
 		//moves the player model up the screen
-		modelPlayer = glm::translate(modelPlayer, glm::vec3(0, 0.01f, 0));
+	
 		playerObject->setPosition(vec3(playerObject->getPosition().x, playerObject->getPosition().y + 0.01f, playerObject->getPosition().z));
 		//if the player model is greater than or equal to 0.5
-		if (playerObject->getPosition().y >= 0.6f)
+		if (playerObject->getPosition().y >= 1.0f)
 		{
 			//then set the state to falling
 			m_moveState = MoveStates::Falling;
@@ -523,10 +492,8 @@ void Game::update()
 		if (playerObject->getPosition().y >= -0.8f)
 		{
 			//move down till -0.8
-			modelPlayer = glm::translate(modelPlayer, glm::vec3(0, -0.01, 0));
 			playerObject->setPosition(vec3(playerObject->getPosition().x, playerObject->getPosition().y - 0.01, playerObject->getPosition().z));
 		}
-		/*if(playerObject->getPosition().x >=)*/
 		//at -0.8 then set the state to staionary
 		else if (playerObject->getPosition().y <= -0.8f)
 		{
@@ -547,14 +514,14 @@ void Game::update()
 		{
 		case AiMove::MoveUp:
 
-			if (obstacleObject[i]->getPosition().y <= 0.2f)
+			if (obstacleObject[i]->getPosition().y <= 1.8f)
 			{
-				modelObstacle = glm::translate(modelObstacle, glm::vec3(0, 0.01f, 0));
+				
 				obstacleObject[i]->setPosition(vec3(obstacleObject[i]->getPosition().x, obstacleObject[i]->getPosition().y + 0.01f, obstacleObject[i]->getPosition().z));
 			}
-			if (obstacleObject[i]->getPosition().y >= 0.2f)
+			if (obstacleObject[i]->getPosition().y >= 1.8f)
 			{
-				modelObstacle = glm::translate(modelObstacle, glm::vec3(0, -0.01f, 0));
+				
 				obstacleObject[i]->setPosition(vec3(obstacleObject[i]->getPosition().x, obstacleObject[i]->getPosition().y - 0.01f, obstacleObject[i]->getPosition().z));
 				m_blockMove = AiMove::MoveDown;
 			}
@@ -563,7 +530,7 @@ void Game::update()
 
 			if (m_timer == 1200 && obstacleObject[i]->getPosition().y >= -0.8f)
 			{
-				modelObstacle = glm::translate(modelObstacle, glm::vec3(0, -0.02f, 0));
+				
 				obstacleObject[i]->setPosition(vec3(obstacleObject[i]->getPosition().x, obstacleObject[i]->getPosition().y - 0.02f, obstacleObject[i]->getPosition().z));
 			}
 			else if (obstacleObject[i]->getPosition().y <= -0.8f)
@@ -576,21 +543,14 @@ void Game::update()
 
 		}
 	}
+	std::cout << playerObject->getPosition().x << " " << playerObject->getPosition().y << std::endl;
+	
+	if (obstacleObject[0]->getPosition().y >= -0.8f && obstacleObject[0]->getPosition().y <= -0.6f
+			&& playerObject->getPosition().x >= 4.8f && playerObject->getPosition().x <= 6.2f)
+	{
+			playerObject->setPosition(vec3(-4.0f, -0.8f, 0.0f));
 
-
-	aabb_ground.min = c2V(groundRect.getPosition().x, groundRect.getPosition().y);
-	aabb_ground.max = c2V(
-		groundRect.getPosition().x +
-		groundRect.getGlobalBounds().width,
-		groundRect.getPosition().y +
-		groundRect.getGlobalBounds().height);
-
-
-
-	aabb_player.min = c2V(playerRect.getPosition().x, playerRect.getPosition().y);
-	aabb_player.max = c2V(playerRect.getGlobalBounds().width / 6, playerRect.getGlobalBounds().width / 6);
-
-	/*result = c2AABBtoAABB(aabb_player, aabb_ground);*/
+	}
 
 #if (DEBUG >= 2)
 	DEBUG_MSG("Updating...");
@@ -712,7 +672,7 @@ void Game::render()
 	glEnableVertexAttribArray(colorID);
 	glEnableVertexAttribArray(uvID);
 	//run through a for loop to draw two cubes
-	for (int i = 0; i < 6; i++)
+	for (int i = 0; i < 50; i++)
 	{
 		glUniform1f(x_offsetID, game_object[i]->getPosition().x);
 		glUniform1f(y_offsetID, game_object[i]->getPosition().y);
@@ -779,14 +739,15 @@ void Game::unload()
 }
 void Game::setUpcontent()
 {
-	if (!texture.loadFromFile("Assets\\Textures\\square.png"))
+	/*if (!texture.loadFromFile("Assets\\Textures\\square.png"))
 	{
 		std::cout << "Cant load square image " << std::endl;
 	}
 
-	playerRect.setTexture(texture);
+	playerRect.setSize(sf::Vector2f(50.0f,50.0f));
 	playerRect.setPosition(playerObject->getPosition().x, playerObject->getPosition().y);
 
-	groundRect.setTexture(texture);
-	groundRect.setPosition(game_object[0]->getPosition().x, game_object[0]->getPosition().y);
+	sf::RectangleShape playerRect;
+	sf::RectangleShape obstacleRect;
+	groundRect.setPosition(game_object[0]->getPosition().x, game_object[0]->getPosition().y);*/
 }
