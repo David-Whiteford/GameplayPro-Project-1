@@ -505,7 +505,7 @@ void Game::update()
 	
 	movingblockCollision();
 	rampsCollision();
-	/*objectiveCollision();*/
+	objectiveCollision();
 
 	if (m_view == 2)
 	{
@@ -1071,18 +1071,21 @@ void Game::movingblockCollision()
 	}
 
 }
-//void Game::objectiveCollision()
-//{
-//	for (i = 0; i < 2; i++)
-//	{
-//		if (playerObject->getPosition().x + 1 >= objective[i]->getPosition().x - 1 &&
-//			objective[i]->getPosition().x + 1 >= playerObject->getPosition().x - 1 &&
-//			playerObject->getPosition().y + 1 >= objective[i]->getPosition().y - 1 &&
-//			objective[i]->getPosition().y + 1 >= playerObject->getPosition().y - 1)
-//		{
-//			playerObject->setPosition(vec3(-4.0f, -0.8f, 0.0f));
-//
-//		}
-//	}
-//
-//}
+void Game::objectiveCollision()
+{
+	//loop for the objective
+	for (int i = 0; i < 2; i++)
+	{
+		//collision between player and objective
+		if (playerObject->getPosition().x + 1 >= objective[i]->getPosition().x - 1 &&
+			objective[i]->getPosition().x + 1 >= playerObject->getPosition().x - 1 &&
+			playerObject->getPosition().y + 1 >= objective[i]->getPosition().y - 1 &&
+			objective[i]->getPosition().y + 1 >= playerObject->getPosition().y - 1)
+		{
+			//set the position of the player
+			playerObject->setPosition(vec3(-4.0f, -0.8f, 0.0f));
+
+		}
+	}
+
+}
