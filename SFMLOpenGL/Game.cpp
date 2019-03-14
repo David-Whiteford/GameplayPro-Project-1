@@ -502,165 +502,14 @@ void Game::initialize()
 
 void Game::update()
 {
-	
+	//function calls for the move , ramps,objective,player move 
+	//,obstacle move,camera, obstacle collisions
 	movingblockCollision();
 	rampsCollision();
 	objectiveCollision();
-
-	if (m_view == 2)
-	{
-		x_offset = { 10.0f }, y_offset = { -10.0f }, z_offset = { -10.0f }; // offset on screen (Vertex Shader)
-	}
-
-	if (m_view == 1)
-	{
-		x_offset = { 0.0f }, y_offset = { -2.0f }, z_offset = { -10.0f }; // offset on screen (Vertex Shader)
-	}
-	
-	//if the d key is pressed
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
-	{
-		//move the player model to the right
-		playerObject->setPosition(vec3(playerObject->getPosition().x + 0.01f, playerObject->getPosition().y, playerObject->getPosition().z));
-		
-	}
-	//when the a is pressed move to the left
-	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
-	{
-
-		/*playerRect.setPosition(playerRect.getPosition().x - 0.02f, playerRect.getPosition().y);*/
-		//move the player model to the left
-		playerObject->setPosition(vec3(playerObject->getPosition().x - 0.01f, playerObject->getPosition().y, playerObject->getPosition().z));
-
-	}
-	//switch statement for the jumping states
-	switch (m_moveState)
-	{
-		//the initial state the not jumping state
-	case MoveStates::Stationary:
-		//checks if the space bar is pressd and switchs the state to jumping
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
-		{
-			m_moveState = MoveStates::Jumping;
-		}
-		break;
-		//jumping state
-	case MoveStates::Jumping:
-		//moves the player model up the screen
-		playerObject->setPosition(vec3(playerObject->getPosition().x, playerObject->getPosition().y + 0.01f, playerObject->getPosition().z));
-		playerRect.setPosition(playerRect.getPosition().x , playerRect.getPosition().y + 0.01f);
-		//if the player model is greater than or equal to 0.5
-		if (playerObject->getPosition().y >= m_maxHeight)
-		{
-			//then set the state to falling
-			m_moveState = MoveStates::Falling;
-		}
-		break;
-	case MoveStates::Falling:
-		//if its greater than -0.8 the cause the player to fall 
-		if (playerObject->getPosition().y >= m_groundPos)
-		{
-			//move down till -0.8
-			playerObject->setPosition(vec3(playerObject->getPosition().x, playerObject->getPosition().y - 0.01f, playerObject->getPosition().z));
-			playerRect.setPosition(playerRect.getPosition().x, playerRect.getPosition().y - 0.01f);
-		}
-		//at -0.8 then set the state to staionary
-		else if (playerObject->getPosition().y <= m_groundPos)
-		{
-			m_maxHeight = { playerObject->getPosition().y + 5.0f };
-			m_moveState = MoveStates::Stationary;
-		}
-		break;
-	}
-
-	//timer for the obstacle movement
-	if (m_timer < 1500)
-	{
-		m_timer++;
-	}
-
-	for (int i = 0; i < 3; i++)
-	{
-		switch (m_blockMove)
-		{
-			//switch to move up the screen 
-		case AiMove::MoveUp:
-			//if the obstacle is less than 1.8
-			if (obstacleObject[i]->getPosition().y <= 1.8f)
-			{	
-				//moves up the screen 
-				obstacleObject[i]->setPosition(vec3(obstacleObject[i]->getPosition().x, obstacleObject[i]->getPosition().y + 0.01f, obstacleObject[i]->getPosition().z));
-			}
-			//if the obstacle is greater than 1.8
-			if (obstacleObject[i]->getPosition().y >= 1.8f)
-			{
-				//moves down  the screen
-				obstacleObject[i]->setPosition(vec3(obstacleObject[i]->getPosition().x, obstacleObject[i]->getPosition().y - 0.01f, obstacleObject[i]->getPosition().z));
-				//switch to the move down screen 
-				m_blockMove = AiMove::MoveDown;
-			}
-			break;
-		case AiMove::MoveDown:
-			//the timer is 1500 and is gretaer than the ground
-			if (m_timer == 1500 && obstacleObject[i]->getPosition().y >= -0.8f)
-			{
-				//move down
-				obstacleObject[i]->setPosition(vec3(obstacleObject[i]->getPosition().x, obstacleObject[i]->getPosition().y - 0.01f, obstacleObject[i]->getPosition().z));
-			}
-			//when at the ground 
-			else if (obstacleObject[i]->getPosition().y <= -0.8f)
-			{
-				//switch to move up
-				m_blockMove = AiMove::MoveUp;
-				//reset timer
-				m_timer = 0;
-			}
-			
-			break;
-
-		}
-	}
-	//it does the key presses for the view
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
-	{
-		m_view = 1;
-	}
-	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
-	{
-		m_view = 2;
-	}
-	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
-	{
-		m_view = 3;
-	}
-
-	if (m_view == 2)
-	{
-		view = lookAt(
-			vec3(playerObject->getPosition().x - x_offset, playerObject->getPosition().y - y_offset, playerObject->getPosition().z - z_offset),	// Camera (x,y,z), in World Space
-			vec3(playerObject->getPosition().x, playerObject->getPosition().y, playerObject->getPosition().z),		// Camera looking at player
-			vec3(0.0f, 1.0f, 0.0f)		// 0.0f, 1.0f, 0.0f Look Down and 0.0f, -1.0f, 0.0f Look Up
-		);
-
-	}
-	if (m_view == 1)
-	{
-		view = lookAt(
-			vec3(playerObject->getPosition().x - x_offset, playerObject->getPosition().y - y_offset, playerObject->getPosition().z - z_offset),	// Camera (x,y,z), in World Space
-			vec3(playerObject->getPosition().x, playerObject->getPosition().y, playerObject->getPosition().z),		// Camera looking at player
-			vec3(0.0f, 1.0f, 0.0f)		// 0.0f, 1.0f, 0.0f Look Down and 0.0f, -1.0f, 0.0f Look Up
-		);
-
-	}
-
-	view = lookAt(
-		vec3(playerObject->getPosition().x - x_offset, playerObject->getPosition().y - y_offset, playerObject->getPosition().z - z_offset),	// Camera (x,y,z), in World Space
-		vec3(playerObject->getPosition().x, playerObject->getPosition().y, playerObject->getPosition().z),		// Camera looking at player
-		vec3(0.0f, 1.0f, 0.0f)
-	);
-	
-	
-
+	playerMove();
+	obstacleMove();
+	camera();
 	obstacleCollision();
 
 
@@ -678,9 +527,6 @@ void Game::update()
 	mvpObjective = projection * view * modelObjective;
 
 
-	/*DEBUG_MSG(model[0].x);
-	DEBUG_MSG(model[0].y);
-	DEBUG_MSG(model[0].z);*/
 
 
 }
@@ -716,8 +562,7 @@ void Game::render()
 	text.setFillColor(sf::Color(255, 255, 255, 170));
 	text.setPosition(50.f, 50.f);
 
-	window.draw(groundRect);
-	window.draw(playerRect);
+	
 	window.draw(text);
 
 	// Restore OpenGL render states
@@ -846,7 +691,9 @@ void Game::render()
 
 		glDrawElements(GL_TRIANGLES, 3 * INDICES, GL_UNSIGNED_INT, NULL);
 	}
+	//set the mvp of the objective
 	glUniformMatrix4fv(mvpID, 1, GL_FALSE, &mvpObjective[0][0]);
+	//loop the through the objectives
 	for (int i = 0; i <2; i++)
 	{
 		glUniform1f(x_offsetID, objective[i]->getPosition().x);
@@ -896,13 +743,7 @@ void Game::unload()
 }
 void Game::setUpcontent()
 {
-	playerRect.setFillColor(sf::Color::Yellow);
-	playerRect.setSize(sf::Vector2f(50.0f,50.0f));
-	playerRect.setPosition(300.0f, 290.0f);
 
-	groundRect.setFillColor(sf::Color::Red);
-	groundRect.setSize(sf::Vector2f(50.0f, 50.0f));
-	groundRect.setPosition(300.0f, 341.0f);
 
 	/*obstacleRect*/
 
@@ -1086,6 +927,167 @@ void Game::objectiveCollision()
 			playerObject->setPosition(vec3(-4.0f, -0.8f, 0.0f));
 
 		}
+	}
+
+}
+void Game::camera()
+{
+	//it does the key presses for the view
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
+	{
+		m_view = 1;
+	}
+	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
+	{
+		m_view = 2;
+	}
+	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
+	{
+		m_view = 3;
+	}
+
+	if (m_view == 2)
+	{
+		view = lookAt(
+			vec3(playerObject->getPosition().x - x_offset, playerObject->getPosition().y - y_offset, playerObject->getPosition().z - z_offset),	// Camera (x,y,z), in World Space
+			vec3(playerObject->getPosition().x, playerObject->getPosition().y, playerObject->getPosition().z),		// Camera looking at player
+			vec3(0.0f, 1.0f, 0.0f)		// 0.0f, 1.0f, 0.0f Look Down and 0.0f, -1.0f, 0.0f Look Up
+		);
+
+	}
+	if (m_view == 1)
+	{
+		view = lookAt(
+			vec3(playerObject->getPosition().x - x_offset, playerObject->getPosition().y - y_offset, playerObject->getPosition().z - z_offset),	// Camera (x,y,z), in World Space
+			vec3(playerObject->getPosition().x, playerObject->getPosition().y, playerObject->getPosition().z),		// Camera looking at player
+			vec3(0.0f, 1.0f, 0.0f)		// 0.0f, 1.0f, 0.0f Look Down and 0.0f, -1.0f, 0.0f Look Up
+		);
+
+	}
+
+	view = lookAt(
+		vec3(playerObject->getPosition().x - x_offset, playerObject->getPosition().y - y_offset, playerObject->getPosition().z - z_offset),	// Camera (x,y,z), in World Space
+		vec3(playerObject->getPosition().x, playerObject->getPosition().y, playerObject->getPosition().z),		// Camera looking at player
+		vec3(0.0f, 1.0f, 0.0f)
+	);
+
+
+}
+void Game::obstacleMove()
+{
+	if (m_timer < 1500)
+	{
+		m_timer++;
+	}
+
+	for (int i = 0; i < 3; i++)
+	{
+		switch (m_blockMove)
+		{
+			//switch to move up the screen 
+		case AiMove::MoveUp:
+			//if the obstacle is less than 1.8
+			if (obstacleObject[i]->getPosition().y <= 1.8f)
+			{
+				//moves up the screen 
+				obstacleObject[i]->setPosition(vec3(obstacleObject[i]->getPosition().x, obstacleObject[i]->getPosition().y + 0.01f, obstacleObject[i]->getPosition().z));
+			}
+			//if the obstacle is greater than 1.8
+			if (obstacleObject[i]->getPosition().y >= 1.8f)
+			{
+				//moves down  the screen
+				obstacleObject[i]->setPosition(vec3(obstacleObject[i]->getPosition().x, obstacleObject[i]->getPosition().y - 0.01f, obstacleObject[i]->getPosition().z));
+				//switch to the move down screen 
+				m_blockMove = AiMove::MoveDown;
+			}
+			break;
+		case AiMove::MoveDown:
+			//the timer is 1500 and is gretaer than the ground
+			if (m_timer == 1500 && obstacleObject[i]->getPosition().y >= -0.8f)
+			{
+				//move down
+				obstacleObject[i]->setPosition(vec3(obstacleObject[i]->getPosition().x, obstacleObject[i]->getPosition().y - 0.01f, obstacleObject[i]->getPosition().z));
+			}
+			//when at the ground 
+			else if (obstacleObject[i]->getPosition().y <= -0.8f)
+			{
+				//switch to move up
+				m_blockMove = AiMove::MoveUp;
+				//reset timer
+				m_timer = 0;
+			}
+
+			break;
+
+		}
+	}
+}
+void Game::playerMove()
+{
+	if (m_view == 2)
+	{
+		x_offset = { 10.0f }, y_offset = { -10.0f }, z_offset = { -10.0f }; // offset on screen (Vertex Shader)
+	}
+
+	if (m_view == 1)
+	{
+		x_offset = { 0.0f }, y_offset = { -2.0f }, z_offset = { -10.0f }; // offset on screen (Vertex Shader)
+	}
+
+	//if the d key is pressed
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
+	{
+		//move the player model to the right
+		playerObject->setPosition(vec3(playerObject->getPosition().x + 0.01f, playerObject->getPosition().y, playerObject->getPosition().z));
+
+	}
+	//when the a is pressed move to the left
+	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
+	{
+
+		/*playerRect.setPosition(playerRect.getPosition().x - 0.02f, playerRect.getPosition().y);*/
+		//move the player model to the left
+		playerObject->setPosition(vec3(playerObject->getPosition().x - 0.01f, playerObject->getPosition().y, playerObject->getPosition().z));
+
+	}
+	//switch statement for the jumping states
+	switch (m_moveState)
+	{
+		//the initial state the not jumping state
+	case MoveStates::Stationary:
+		//checks if the space bar is pressd and switchs the state to jumping
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
+		{
+			m_moveState = MoveStates::Jumping;
+		}
+		break;
+		//jumping state
+	case MoveStates::Jumping:
+		//moves the player model up the screen
+		playerObject->setPosition(vec3(playerObject->getPosition().x, playerObject->getPosition().y + 0.01f, playerObject->getPosition().z));
+		
+		//if the player model is greater than or equal to 0.5
+		if (playerObject->getPosition().y >= m_maxHeight)
+		{
+			//then set the state to falling
+			m_moveState = MoveStates::Falling;
+		}
+		break;
+	case MoveStates::Falling:
+		//if its greater than -0.8 the cause the player to fall 
+		if (playerObject->getPosition().y >= m_groundPos)
+		{
+			//move down till -0.8
+			playerObject->setPosition(vec3(playerObject->getPosition().x, playerObject->getPosition().y - 0.01f, playerObject->getPosition().z));
+			
+		}
+		//at -0.8 then set the state to staionary
+		else if (playerObject->getPosition().y <= m_groundPos)
+		{
+			m_maxHeight = { playerObject->getPosition().y + 5.0f };
+			m_moveState = MoveStates::Stationary;
+		}
+		break;
 	}
 
 }

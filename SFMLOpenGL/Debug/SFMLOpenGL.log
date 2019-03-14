@@ -1,3 +1,3 @@
 ﻿  Game.cpp
-c:\users\dave2\desktop\gameplay programming\gameplaypro-project-1\sfmlopengl\game.cpp(1033): warning C4305: '=': truncation from 'double' to 'float'
+c:\users\dave2\desktop\gameplay programming\gameplaypro-project-1\sfmlopengl\game.cpp(874): warning C4305: '=': truncation from 'double' to 'float'
   SFMLOpenGL.vcxproj -> C:\Users\dave2\Desktop\Gameplay Programming\GameplayPro-Project-1\Debug\SFMLOpenGL.exe

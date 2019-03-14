@@ -46,17 +46,16 @@ private:
 	GameObject* objective[2];
 	RenderWindow window;
 	sf::Texture texture;
-	sf::RectangleShape playerRect;
-	sf::RectangleShape groundRect;
+	
 
-	c2AABB aabb_ground;
-	c2AABB aabb_player;
+
 	int result{ 0 };
 
 	Clock clock;
 	Time time;
 	bool animate = false;
 	vec3 animation = vec3(0.0f);
+	//variables for the game
 	float rotation = 0.0f;
 	float m_groundPos{ -0.8f };
 	float xPos{ 0.0f };
@@ -65,9 +64,11 @@ private:
 	int m_view{ 0 };
 	float m_maxHeight{ 0.0f };
 	int m_doOnce{ 0 };
+	//bools for the game
 	bool newHeight{ false };
 	bool isRunning = false;
 	int m_timer{ 0 };
+	//all functions fo the game
 	void initialize();
 	void update();
 	void render();
@@ -77,6 +78,9 @@ private:
 	void rampsCollision();
 	void movingblockCollision();
 	void objectiveCollision();
+	void camera();
+	void obstacleMove();
+	void playerMove();
 	enum AiMove
 	{
 		MoveUp,
